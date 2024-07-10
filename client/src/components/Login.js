@@ -1,10 +1,13 @@
-// src/Login.js
+// src/components/Login.js
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import '../Styles/Login.css';
 
 function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -20,7 +23,7 @@ function Login() {
       const data = await response.json();
       if (response.ok) {
         alert('Login successful!');
-        // Redirecione ou faça outras ações após o login
+        navigate('/news'); // Redirecionar para a página de News
       } else {
         alert(`Login failed: ${data.message}`);
       }
