@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import '../Styles/News.css';
 import logo from '../images/brasao.png';
 
+const RESULTS_PER_PAGE = 10;
+
 function News() {
   const [keyword, setKeyword] = useState('');
   const [iniciodia, setInicioDia] = useState('');
@@ -12,6 +14,7 @@ function News() {
   const [fimano, setFimAno] = useState('');
   const [results, setResults] = useState([]);
   const [message, setMessage] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
   const handleSearch = async () => {
     const params = {
@@ -33,12 +36,20 @@ function News() {
       console.log('Resultados:', data); // Log dos resultados
       setResults(data);
       setMessage('');
+      setCurrentPage(1); // Resetar para a primeira página ao fazer uma nova busca
     } catch (error) {
       console.error('Erro ao comunicar com o backend:', error);
       setMessage('Erro ao comunicar com o backend.');
       setResults([]);
     }
   };
+
+  const totalPages = Math.ceil(results.length / RESULTS_PER_PAGE);
+
+  const displayedResults = results.slice(
+    (currentPage - 1) * RESULTS_PER_PAGE,
+    currentPage * RESULTS_PER_PAGE
+  );
 
   return (
     <div>
@@ -49,7 +60,14 @@ function News() {
         setFimDia={setFimDia} setFimMes={setFimMes} setFimAno={setFimAno}
       />
       {message && <p>{message}</p>}
-      <SearchResults results={results} />
+      <SearchResults results={displayedResults} />
+      {totalPages > 1 && (
+        <Pagination 
+          currentPage={currentPage} 
+          totalPages={totalPages} 
+          setCurrentPage={setCurrentPage} 
+        />
+      )}
     </div>
   );
 }
@@ -103,11 +121,30 @@ function SearchResults({ results }) {
       {results.map((result, index) => (
         <div key={index} className="result-item">
           <a href={result.link} target="_blank" rel="noopener noreferrer">
-            {result.image && <img src={result.image} alt="Thumbnail" className="thumbnail" />}
             <p>{result.title}</p>
           </a>
         </div>
       ))}
+    </div>
+  );
+}
+
+function Pagination({ currentPage, totalPages, setCurrentPage }) {
+  return (
+    <div className="pagination-container">
+      <button 
+        disabled={currentPage === 1} 
+        onClick={() => setCurrentPage(currentPage - 1)}
+      >
+        Anterior
+      </button>
+      <span>Página {currentPage} de {totalPages}</span>
+      <button 
+        disabled={currentPage === totalPages} 
+        onClick={() => setCurrentPage(currentPage + 1)}
+      >
+        Próxima
+      </button>
     </div>
   );
 }
