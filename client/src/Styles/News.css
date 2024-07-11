@@ -38,7 +38,7 @@
   border: 1px solid #ccc;
   border-radius: 4px;
   outline: none;
-  margin: 0;
+  margin: 0px;
 }
 
 .search-button {
@@ -53,7 +53,7 @@
 }
 
 .search-button:hover {
-  background-color: #b34848;
+  background-color: #cc0000;
 }
 
 .date-filter-container {
@@ -79,4 +79,47 @@
   border: 1px solid #ccc;
   border-radius: 4px;
   outline: none;
+}
+
+.results-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px;
+}
+
+.result-item {
+  display: flex;
+  align-items: center;
+  margin: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px;
+  width: 80%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-decoration: none;
+}
+
+.result-item a {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  text-decoration: none;
+  color: #333;
+}
+
+.result-item img.thumbnail {
+  width: 100px;
+  height: auto;
+  margin-right: 10px;
+  border-radius: 4px;
+}
+
+.result-item p {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.result-item a:hover {
+  text-decoration: underline;
 }

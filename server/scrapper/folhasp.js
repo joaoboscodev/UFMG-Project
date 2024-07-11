@@ -1,9 +1,7 @@
 // const axios = require('axios');
 // const cheerio = require('cheerio');
 
-// async function search(keyword, iniciodia, iniciomes, inicioano, fimdia, fimmes, fimano) {
-//     const url = `https://search.folha.uol.com.br/search?q=${keyword}&periodo=personalizado&sd=${iniciodia}%2F${iniciomes}%2F${inicioano}&ed=${fimdia}%2F${fimmes}%2F${inicioano}&site=todos`;
-    
+// async function search(keyword, iniciodia, iniciomes, inicioano, fimdia, fimmes, fimano, url) {
 //     try {
 //         const response = await axios.get(url);
 //         if (response.status === 200) {

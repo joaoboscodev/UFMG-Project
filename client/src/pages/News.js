@@ -10,15 +10,34 @@ function News() {
   const [fimdia, setFimDia] = useState('');
   const [fimmes, setFimMes] = useState('');
   const [fimano, setFimAno] = useState('');
+  const [results, setResults] = useState([]);
+  const [message, setMessage] = useState('');
 
-  const handleSearch = () => {
-    let url = `https://search.folha.uol.com.br/search?q=${keyword}`;
+  const handleSearch = async () => {
+    const params = {
+      keyword,
+      iniciodia,
+      iniciomes,
+      inicioano,
+      fimdia,
+      fimmes,
+      fimano,
+    };
 
-    if (iniciodia && iniciomes && inicioano && fimdia && fimmes && fimano) {
-      url += `&periodo=personalizado&sd=${iniciodia}%2F${iniciomes}%2F${inicioano}&ed=${fimdia}%2F${fimmes}%2F${fimano}&site=todos`;
+    const queryString = new URLSearchParams(params).toString();
+    const url = `http://localhost:5000/api/search?${queryString}`;
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      console.log('Resultados:', data); // Log dos resultados
+      setResults(data);
+      setMessage('');
+    } catch (error) {
+      console.error('Erro ao comunicar com o backend:', error);
+      setMessage('Erro ao comunicar com o backend.');
+      setResults([]);
     }
-
-    window.open(url, '_blank');
   };
 
   return (
@@ -29,6 +48,8 @@ function News() {
         setInicioDia={setInicioDia} setInicioMes={setInicioMes} setInicioAno={setInicioAno} 
         setFimDia={setFimDia} setFimMes={setFimMes} setFimAno={setFimAno}
       />
+      {message && <p>{message}</p>}
+      <SearchResults results={results} />
     </div>
   );
 }
@@ -72,6 +93,21 @@ function DateFilter({ setInicioDia, setInicioMes, setInicioAno, setFimDia, setFi
         <input type="text" placeholder="Mês" onChange={(e) => setFimMes(e.target.value)} />
         <input type="text" placeholder="Ano" onChange={(e) => setFimAno(e.target.value)} />
       </div>
+    </div>
+  );
+}
+
+function SearchResults({ results }) {
+  return (
+    <div className="results-container">
+      {results.map((result, index) => (
+        <div key={index} className="result-item">
+          <a href={result.link} target="_blank" rel="noopener noreferrer">
+            {result.image && <img src={result.image} alt="Thumbnail" className="thumbnail" />}
+            <p>{result.title}</p>
+          </a>
+        </div>
+      ))}
     </div>
   );
 }
