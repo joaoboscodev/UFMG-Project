@@ -12,7 +12,12 @@ function News() {
   const [fimano, setFimAno] = useState('');
 
   const handleSearch = () => {
-    const url = `https://search.folha.uol.com.br/search?q=${keyword}&periodo=personalizado&sd=${iniciodia}%2F${iniciomes}%2F${inicioano}&ed=${fimdia}%2F${fimmes}%2F${fimano}&site=todos`;
+    let url = `https://search.folha.uol.com.br/search?q=${keyword}`;
+
+    if (iniciodia && iniciomes && inicioano && fimdia && fimmes && fimano) {
+      url += `&periodo=personalizado&sd=${iniciodia}%2F${iniciomes}%2F${inicioano}&ed=${fimdia}%2F${fimmes}%2F${fimano}&site=todos`;
+    }
+
     window.open(url, '_blank');
   };
 
