@@ -6,8 +6,7 @@ function News() {
   return (
     <div>
       <Header />
-      <h2>News</h2>
-      <p>Welcome to the News page!</p>
+      <SearchBox />
     </div>
   );
 }
@@ -17,6 +16,15 @@ function Header() {
     <div className="header">
       <img src={logo} alt="Logo" className="logo" />
       <h1 className="title">UFMG - Search Project</h1>
+    </div>
+  );
+}
+
+function SearchBox() {
+  return (
+    <div className="search-container">
+      <input type="text" placeholder="Pesquisar..." className="search-input" />
+      <button className="search-button">Pesquisar</button>
     </div>
   );
 }
