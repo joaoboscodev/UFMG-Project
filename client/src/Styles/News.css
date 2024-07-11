@@ -1,0 +1,27 @@
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(to top, #ac6565, #ff0000);
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    margin-top: 2px;
+  }
+  
+  .logo {
+    height: 60px;
+    margin-right: 20px;
+  }
+  
+  .title {
+    flex: 1;
+    text-align: center;
+    margin: 0;
+    font-size: 2rem;
+    font-family: 'Arial', sans-serif;
+    color: #fff;
+    text-shadow: -3px 3px 1px rgba(0, 0, 0, 0.5);
+  }
+  
