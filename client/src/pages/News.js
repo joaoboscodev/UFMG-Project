@@ -15,8 +15,30 @@ function News() {
   const [results, setResults] = useState([]);
   const [message, setMessage] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [keywords, setKeywords] = useState([]); // Estado para as palavras-chave adicionais
 
-  const handleSearch = async () => {
+  const handleSingleSearch = async () => {
+    setResults([]); // Limpar resultados anteriores
+    setMessage('');
+    setCurrentPage(1); // Resetar para a primeira página ao fazer uma nova busca
+
+    if (keyword.trim() !== '') {
+      await searchByKeyword(keyword.trim());
+    }
+  };
+
+  const handleMultiSearch = async () => {
+    setResults([]); // Limpar resultados anteriores
+    setMessage('');
+    setCurrentPage(1); // Resetar para a primeira página ao fazer uma nova busca
+
+    // Realizar pesquisa separada para cada palavra-chave
+    for (let i = 0; i < keywords.length; i++) {
+      await searchByKeyword(keywords[i]);
+    }
+  };
+
+  const searchByKeyword = async (keyword) => {
     const params = {
       keyword,
       iniciodia,
@@ -34,14 +56,22 @@ function News() {
       const response = await fetch(url);
       const data = await response.json();
       console.log('Resultados:', data); // Log dos resultados
-      setResults(data);
-      setMessage('');
-      setCurrentPage(1); // Resetar para a primeira página ao fazer uma nova busca
+      setResults(prevResults => [...prevResults, ...data]); // Adicionar novos resultados aos resultados anteriores
     } catch (error) {
       console.error('Erro ao comunicar com o backend:', error);
       setMessage('Erro ao comunicar com o backend.');
-      setResults([]);
     }
+  };
+
+  const addKeyword = () => {
+    if (keyword.trim() !== '') {
+      setKeywords([...keywords, keyword.trim()]);
+      setKeyword('');
+    }
+  };
+
+  const removeKeyword = (index) => {
+    setKeywords(keywords.filter((_, i) => i !== index));
   };
 
   const totalPages = Math.ceil(results.length / RESULTS_PER_PAGE);
@@ -54,7 +84,13 @@ function News() {
   return (
     <div>
       <Header />
-      <SearchBox keyword={keyword} setKeyword={setKeyword} handleSearch={handleSearch} />
+      <SearchBox 
+        keyword={keyword} 
+        setKeyword={setKeyword} 
+        handleSingleSearch={handleSingleSearch} 
+        addKeyword={addKeyword} 
+      />
+      <KeywordsBox keywords={keywords} removeKeyword={removeKeyword} handleMultiSearch={handleMultiSearch} />
       <DateFilter 
         setInicioDia={setInicioDia} setInicioMes={setInicioMes} setInicioAno={setInicioAno} 
         setFimDia={setFimDia} setFimMes={setFimMes} setFimAno={setFimAno}
@@ -81,17 +117,40 @@ function Header() {
   );
 }
 
-function SearchBox({ keyword, setKeyword, handleSearch }) {
+function SearchBox({ keyword, setKeyword, handleSingleSearch, addKeyword }) {
   return (
     <div className="search-container">
       <input 
         type="text" 
-        placeholder="Pesquisar..." 
+        placeholder="Adicionar palavra-chave..." 
         className="search-input" 
         value={keyword} 
         onChange={(e) => setKeyword(e.target.value)} 
       />
-      <button className="search-button" onClick={handleSearch}>Pesquisar</button>
+      <button className="search-button" onClick={handleSingleSearch}>Pesquisar</button>
+      <button className="search-button" onClick={addKeyword}>Adicionar Palavra-chave</button>
+    </div>
+  );
+}
+
+function KeywordsBox({ keywords, removeKeyword, handleMultiSearch }) {
+  return (
+    <div className="keywords-container">
+      <h3>Palavras-chave adicionadas:</h3>
+      {keywords.length === 0 ? (
+        <p>Nenhuma palavra-chave adicionada.</p>
+      ) : (
+        <ul>
+          {keywords.map((kw, index) => (
+            <li key={index}>
+              {kw} <button onClick={() => removeKeyword(index)}>Remover</button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {keywords.length > 0 && (
+        <button className="search-button" onClick={handleMultiSearch}>Pesquisar todas as palavras-chave</button>
+      )}
     </div>
   );
 }

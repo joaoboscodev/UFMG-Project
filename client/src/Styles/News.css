@@ -5,9 +5,7 @@
   background: linear-gradient(to top, #ac6565, #ff0000);
   padding: 20px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
   margin-bottom: 10px;
-  margin-top: 2px;
 }
 
 .logo {
@@ -113,6 +111,7 @@
   height: 80px;
   margin-right: 10px;
   border-radius: 4px;
+  box-shadow: -1px 2px 8px rgba(0, 0, 0, 0.8); /* Adiciona uma sombra à imagem */
 }
 
 .result-item p {
@@ -148,4 +147,40 @@
 
 .pagination-container span {
   font-size: 1.2rem;
+}
+
+.keywords-container {
+  margin: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.keywords-container h3 {
+  margin: 0 0 10px 0;
+}
+
+.keywords-container ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.keywords-container li {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+}
+
+.keywords-container button {
+  background-color: #ff0000;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 2px 5px;
+}
+
+.keywords-container button:hover {
+  background-color: #cc0000;
 }
