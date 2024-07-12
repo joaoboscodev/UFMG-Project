@@ -46,9 +46,14 @@ app.get('/api/search', async (req, res) => {
       $('ol.c-search .c-headline__wrapper').each((i, element) => {
         const link = $(element).find('a').attr('href');
         const title = $(element).find('.c-headline__title').text().trim();
-        console.log('Link:', link); // Log do link
-        console.log('Title:', title); // Log do título
         results.push({ link, title });
+      });
+
+      $('ol.c-search .c-headline__media-wrapper').each((i, element) => {
+        const image = $(element).find('img').attr('src');
+        if (results[i]) {
+          results[i].image = image;
+        }
       });
 
       res.json(results);

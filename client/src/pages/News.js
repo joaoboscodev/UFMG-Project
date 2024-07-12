@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import '../Styles/News.css';
 import logo from '../images/brasao.png';
 
-const RESULTS_PER_PAGE = 10;
+const RESULTS_PER_PAGE = 5;
 
 function News() {
   const [keyword, setKeyword] = useState('');
@@ -121,6 +121,7 @@ function SearchResults({ results }) {
       {results.map((result, index) => (
         <div key={index} className="result-item">
           <a href={result.link} target="_blank" rel="noopener noreferrer">
+            <img src={result.image} alt="" className="thumbnail" />
             <p>{result.title}</p>
           </a>
         </div>

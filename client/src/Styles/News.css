@@ -109,8 +109,8 @@
 }
 
 .result-item img.thumbnail {
-  width: 100px;
-  height: auto;
+  width: 80px; /* Ajuste o tamanho conforme necessário */
+  height: 80px;
   margin-right: 10px;
   border-radius: 4px;
 }
@@ -122,4 +122,30 @@
 
 .result-item a:hover {
   text-decoration: underline;
+}
+
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.pagination-container button {
+  padding: 10px;
+  margin: 0 10px;
+  border: 1px solid #ccc;
+  background-color: #ff0000;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pagination-container button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.pagination-container span {
+  font-size: 1.2rem;
 }
