@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import 'react-datepicker/dist/react-datepicker.css';
+import DatePicker from 'react-datepicker';
 import '../Styles/News.css';
 import logo from '../images/brasao.png';
 
@@ -15,12 +17,12 @@ function News() {
   const [results, setResults] = useState([]);
   const [message, setMessage] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [keywords, setKeywords] = useState([]); // Estado para as palavras-chave adicionais
+  const [keywords, setKeywords] = useState([]);
 
   const handleSingleSearch = async () => {
-    setResults([]); // Limpar resultados anteriores
+    setResults([]);
     setMessage('');
-    setCurrentPage(1); // Resetar para a primeira página ao fazer uma nova busca
+    setCurrentPage(1);
 
     if (keyword.trim() !== '') {
       await searchByKeyword(keyword.trim());
@@ -28,11 +30,10 @@ function News() {
   };
 
   const handleMultiSearch = async () => {
-    setResults([]); // Limpar resultados anteriores
+    setResults([]);
     setMessage('');
-    setCurrentPage(1); // Resetar para a primeira página ao fazer uma nova busca
+    setCurrentPage(1);
 
-    // Realizar pesquisa separada para cada palavra-chave
     for (let i = 0; i < keywords.length; i++) {
       await searchByKeyword(keywords[i]);
     }
@@ -55,8 +56,7 @@ function News() {
     try {
       const response = await fetch(url);
       const data = await response.json();
-      console.log('Resultados:', data); // Log dos resultados
-      setResults(prevResults => [...prevResults, ...data]); // Adicionar novos resultados aos resultados anteriores
+      setResults(prevResults => [...prevResults, ...data]);
     } catch (error) {
       console.error('Erro ao comunicar com o backend:', error);
       setMessage('Erro ao comunicar com o backend.');
@@ -156,19 +156,54 @@ function KeywordsBox({ keywords, removeKeyword, handleMultiSearch }) {
 }
 
 function DateFilter({ setInicioDia, setInicioMes, setInicioAno, setFimDia, setFimMes, setFimAno }) {
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+
+  const handleStartDateChange = (date) => {
+    if (date) {
+      setInicioDia(date.getDate().toString().padStart(2, '0'));
+      setInicioMes((date.getMonth() + 1).toString().padStart(2, '0'));
+      setInicioAno(date.getFullYear().toString());
+    } else {
+      setInicioDia('');
+      setInicioMes('');
+      setInicioAno('');
+    }
+    setStartDate(date);
+  };
+
+  const handleEndDateChange = (date) => {
+    if (date) {
+      setFimDia(date.getDate().toString().padStart(2, '0'));
+      setFimMes((date.getMonth() + 1).toString().padStart(2, '0'));
+      setFimAno(date.getFullYear().toString());
+    } else {
+      setFimDia('');
+      setFimMes('');
+      setFimAno('');
+    }
+    setEndDate(date);
+  };
+
   return (
     <div className="date-filter-container">
       <div className="date-filter">
         <label>Data de Início</label>
-        <input type="text" placeholder="Dia" onChange={(e) => setInicioDia(e.target.value)} />
-        <input type="text" placeholder="Mês" onChange={(e) => setInicioMes(e.target.value)} />
-        <input type="text" placeholder="Ano" onChange={(e) => setInicioAno(e.target.value)} />
+        <DatePicker 
+          selected={startDate} 
+          onChange={handleStartDateChange} 
+          dateFormat="dd/MM/yyyy"
+          placeholderText="Selecione a data de início"
+        />
       </div>
       <div className="date-filter">
         <label>Data de Fim</label>
-        <input type="text" placeholder="Dia" onChange={(e) => setFimDia(e.target.value)} />
-        <input type="text" placeholder="Mês" onChange={(e) => setFimMes(e.target.value)} />
-        <input type="text" placeholder="Ano" onChange={(e) => setFimAno(e.target.value)} />
+        <DatePicker 
+          selected={endDate} 
+          onChange={handleEndDateChange} 
+          dateFormat="dd/MM/yyyy"
+          placeholderText="Selecione a data de fim"
+        />
       </div>
     </div>
   );
