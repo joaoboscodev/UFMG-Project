@@ -18,6 +18,12 @@ function News() {
   const [message, setMessage] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [keywords, setKeywords] = useState([]);
+  const [sources, setSources] = useState({
+    folha: false,
+    g1: false,
+    oglobo: false,
+    cse: false,
+  });
 
   const handleSingleSearch = async () => {
     setResults([]);
@@ -40,6 +46,7 @@ function News() {
   };
 
   const searchByKeyword = async (keyword) => {
+    const selectedSources = Object.keys(sources).filter(source => sources[source]);
     const params = {
       keyword,
       iniciodia,
@@ -48,6 +55,7 @@ function News() {
       fimdia,
       fimmes,
       fimano,
+      source: selectedSources.join(','),
     };
 
     const queryString = new URLSearchParams(params).toString();
@@ -74,6 +82,11 @@ function News() {
     setKeywords(keywords.filter((_, i) => i !== index));
   };
 
+  const handleSourceChange = (e) => {
+    const { name, checked } = e.target;
+    setSources(prevSources => ({ ...prevSources, [name]: checked }));
+  };
+
   const totalPages = Math.ceil(results.length / RESULTS_PER_PAGE);
 
   const displayedResults = results.slice(
@@ -89,6 +102,8 @@ function News() {
         setKeyword={setKeyword} 
         handleSingleSearch={handleSingleSearch} 
         addKeyword={addKeyword} 
+        handleSourceChange={handleSourceChange} 
+        sources={sources} 
       />
       <KeywordsBox keywords={keywords} removeKeyword={removeKeyword} handleMultiSearch={handleMultiSearch} />
       <DateFilter 
@@ -117,18 +132,60 @@ function Header() {
   );
 }
 
-function SearchBox({ keyword, setKeyword, handleSingleSearch, addKeyword }) {
+function SearchBox({ keyword, setKeyword, handleSingleSearch, addKeyword, handleSourceChange, sources }) {
   return (
     <div className="search-container">
-      <input 
-        type="text" 
-        placeholder="Adicionar palavra-chave..." 
-        className="search-input" 
-        value={keyword} 
-        onChange={(e) => setKeyword(e.target.value)} 
-      />
-      <button className="search-button" onClick={handleSingleSearch}>Pesquisar</button>
-      <button className="search-button" onClick={addKeyword}>Adicionar Palavra-chave</button>
+      <div className="search-box-with-buttons">
+        <input 
+          type="text" 
+          placeholder="Adicionar palavra-chave..." 
+          className="search-input" 
+          value={keyword} 
+          onChange={(e) => setKeyword(e.target.value)} 
+        />
+        <div className="buttons-container">
+          <button className="search-button" onClick={handleSingleSearch}>Pesquisar</button>
+          <button className="search-button" onClick={addKeyword}>Adicionar Palavra-chave</button>
+        </div>
+      </div>
+      <div className="source-selection">
+        <label>
+          <input 
+            type="checkbox" 
+            name="folha" 
+            checked={sources.folha}
+            onChange={handleSourceChange} 
+          /> 
+          Folha
+        </label>
+        <label>
+          <input 
+            type="checkbox" 
+            name="g1" 
+            checked={sources.g1}
+            onChange={handleSourceChange} 
+          /> 
+          G1
+        </label>
+        <label>
+          <input 
+            type="checkbox" 
+            name="oglobo" 
+            checked={sources.oglobo}
+            onChange={handleSourceChange} 
+          /> 
+          O Globo
+        </label>
+        <label>
+          <input 
+            type="checkbox" 
+            name="cse" 
+            checked={sources.cse}
+            onChange={handleSourceChange} 
+          /> 
+          CSE
+        </label>
+      </div>
     </div>
   );
 }

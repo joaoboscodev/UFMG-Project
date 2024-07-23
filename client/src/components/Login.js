@@ -34,33 +34,41 @@ function Login() {
   };
 
   return (
-    <div className="login-container">
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>
-            Username:
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
-          </label>
+    <div className="login-page">
+      <div className="login-container">
+        <div className="login-image">
+          <h1>Welcome to UFMG website</h1>
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
         </div>
-        <div>
-          <label>
-            Password:
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </label>
+        <div className="login-form">
+          <h2>Entrar</h2>
+          <form onSubmit={handleSubmit}>
+            <div>
+              <label>
+                Usuário:
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                />
+              </label>
+            </div>
+            <div>
+              <label>
+                Senha:
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </label>
+            </div>
+            <button type="submit">Login</button>
+          </form>
         </div>
-        <button type="submit">Login</button>
-      </form>
+      </div>
     </div>
   );
 }
