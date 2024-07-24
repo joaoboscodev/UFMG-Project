@@ -24,7 +24,8 @@ function News() {
     oglobo: false,
     cse: false,
     correiobraziliense: false,
-    cnnbrasil: false, // Nova fonte adicionada
+    cnnbrasil: false,
+    agenciabrasil: false,
   });
 
   const handleSingleSearch = async () => {
@@ -204,7 +205,16 @@ function SearchBox({ keyword, setKeyword, handleSingleSearch, addKeyword, handle
             onChange={handleSourceChange} 
           /> 
           CNN Brasil
-        </label> {/* Nova fonte adicionada */}
+        </label>
+        <label>
+          <input 
+            type="checkbox" 
+            name="agenciabrasil" 
+            checked={sources.agenciabrasil}
+            onChange={handleSourceChange} 
+          /> 
+          Agência Brasil
+        </label>
       </div>
     </div>
   );

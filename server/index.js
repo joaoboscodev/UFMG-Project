@@ -59,13 +59,24 @@ app.get('/api/search', async (req, res) => {
     urls.push(url);
   }
 
-  if (sources.includes('cnnbrasil')) { // New source
+  if (sources.includes('cnnbrasil')) {
     let url = ` https://www.cnnbrasil.com.br/?s=${keyword}&orderby=date&order=desc`;
     if (iniciodia && iniciomes && inicioano && fimdia && fimmes && fimano) {
       url += `&from=${inicioano}-${iniciomes}-${iniciodia}&to=${fimano}-${fimmes}-${fimdia}`;
     }
     urls.push(url);
   }
+
+  if (sources.includes('agenciabrasil')) {
+    let url = `https://busca.ebc.com.br/nodes?q=${encodeURIComponent(keyword)}&site_id=agenciabrasil&utf8=%E2%9C%93`;
+    if (iniciodia && iniciomes && inicioano && fimdia && fimmes && fimano) {
+      const startDate = `${iniciodia}%2F${iniciomes}%2F${inicioano}`;
+      const endDate = `${fimdia}%2F${fimmes}%2F${fimano}`;
+      url += `&start_date=${startDate}&end_date=${endDate}&commit=Aplicar`;
+    }
+    urls.push(url);
+  }
+  
 
   try {
     const results = [];
@@ -124,6 +135,14 @@ app.get('/api/search', async (req, res) => {
             const title = $(element).find('.news-item-header__title').text().trim();
             const image = $(element).find('img').attr('src');
             results.push({ link, title, image, source: 'cnnbrasil' });
+          });
+        } else if (url.includes('busca.ebc.com.br')) {
+          $('ul#results li').each((i, element) => {
+            const link = $(element).find('.media-heading a').attr('href');
+            const title = $(element).find('.media-heading a').text().trim();
+            // O HTML fornecido não inclui imagens para as notícias, então definimos como null
+            const image = 'https://public.ebc.com.br/templates/logos/v3/logo-ebc.svg';
+            results.push({ link, title, image, source: 'ebc' });
           });
         }
       }
