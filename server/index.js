@@ -13,21 +13,6 @@ app.get('/api', (req, res) => {
   res.json({ message: 'Hello from the server!' });
 });
 
-app.get('/api/test', (req, res) => {
-  console.log('Requisição recebida no backend');
-  res.json({ message: 'Comunicação com o backend bem-sucedida!' });
-});
-
-app.post('/api/login', (req, res) => {
-  const { username, password } = req.body;
-
-  if (username === 'user' && password === 'password') {
-    res.json({ message: 'Login successful!' });
-  } else {
-    res.status(401).json({ message: 'Invalid credentials' });
-  }
-});
-
 app.get('/api/search', async (req, res) => {
   const { keyword, iniciodia, iniciomes, inicioano, fimdia, fimmes, fimano, source } = req.query;
   const sources = source ? source.split(',') : [];
@@ -36,7 +21,7 @@ app.get('/api/search', async (req, res) => {
   if (sources.includes('folha')) {
     let url = `https://search.folha.uol.com.br/search?q=${keyword}`;
     if (iniciodia && iniciomes && inicioano && fimdia && fimmes && fimano) {
-      url += `&periodo=personalizado&sd=${iniciodia}%2F${iniciomes}%2F${inicioano}&ed=${fimdia}%2F${fimmes}%2F${inicioano}&site=todos`;
+      url += `&periodo=personalizado&sd=${iniciodia}%2F${iniciomes}%2F${inicioano}&ed=${fimdia}%2F${fimmes}%2F${fimano}&site=todos`;
     }
     urls.push(url);
   }
@@ -60,8 +45,24 @@ app.get('/api/search', async (req, res) => {
   if (sources.includes('cse')) {
     let url = `https://cse.google.com/cse?oe=utf8&ie=utf8&source=uds&q=${keyword}`;
     if (iniciodia && iniciomes && inicioano && fimdia && fimmes && fimano) {
-      url += `+after:${inicioano}-${iniciomes}-${iniciodia}+before:${fimano}-${fimmes}-${fimdia}&lr=&safe=off&filter=0&gl=&cr=&as_sitesearch=*.uol.com.br/*&as_oq=&cx=33c20c29942ff412b&start=0#gsc.tab=0&gsc.q=biden after%3A2024-07-15 before%3A2024-07-20&gsc.page=1`;
-      console.log(url);
+      url += `+after:${inicioano}-${iniciomes}-${iniciodia}+before:${fimano}-${fimmes}-${fimdia}`;
+    }
+    const rendertronUrl = `https://render-tron.appspot.com/render/${encodeURIComponent(url)}`;
+    urls.push(rendertronUrl);
+  }
+
+  if (sources.includes('correiobraziliense')) {
+    let url = `https://www.correiobraziliense.com.br/busca/?q=${keyword}`;
+    if (iniciodia && iniciomes && inicioano && fimdia && fimmes && fimano) {
+      url += `&from=${inicioano}-${iniciomes}-${iniciodia}&to=${fimano}-${fimmes}-${fimdia}`;
+    }
+    urls.push(url);
+  }
+
+  if (sources.includes('cnnbrasil')) { // New source
+    let url = ` https://www.cnnbrasil.com.br/?s=${keyword}&orderby=date&order=desc`;
+    if (iniciodia && iniciomes && inicioano && fimdia && fimmes && fimano) {
+      url += `&from=${inicioano}-${iniciomes}-${iniciodia}&to=${fimano}-${fimmes}-${fimdia}`;
     }
     urls.push(url);
   }
@@ -69,7 +70,11 @@ app.get('/api/search', async (req, res) => {
   try {
     const results = [];
     for (const url of urls) {
-      const response = await axios.get(url);
+      const response = await axios.get(url, {
+        headers: {
+          'User-Agent': 'Rendertron',
+        },
+      });
       if (response.status === 200) {
         const html = response.data;
         const $ = cheerio.load(html);
@@ -105,6 +110,20 @@ app.get('/api/search', async (req, res) => {
             const title = $(element).find('a.gs-title').text().trim();
             const image = $(element).find('img.gs-image').attr('src');
             results.push({ link, title, image, source: 'cse' });
+          });
+        } else if (url.includes('correiobraziliense.com.br')) {
+          $('#search-results-item li').each((i, element) => {
+            const link = $(element).find('a').attr('href');
+            const title = $(element).find('h2').text().trim();
+            const image = $(element).find('img').attr('src');
+            results.push({ link, title, image, source: 'correiobraziliense' });
+          });
+        } else if (url.includes('cnnbrasil.com.br')) {
+          $('.home__list__tag').each((i, element) => {
+            const link = $(element).attr('href');
+            const title = $(element).find('.news-item-header__title').text().trim();
+            const image = $(element).find('img').attr('src');
+            results.push({ link, title, image, source: 'cnnbrasil' });
           });
         }
       }
