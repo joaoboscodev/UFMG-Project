@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'react-datepicker/dist/react-datepicker.css';
 import DatePicker from 'react-datepicker';
 import '../Styles/News.css';
@@ -16,7 +16,7 @@ function News() {
   const [fimano, setFimAno] = useState('');
   const [results, setResults] = useState([]);
   const [message, setMessage] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPages, setCurrentPages] = useState({});
   const [keywords, setKeywords] = useState([]);
   const [sources, setSources] = useState({
     folha: false,
@@ -27,29 +27,36 @@ function News() {
     cnnbrasil: false,
     agenciabrasil: false,
   });
+  const [dropdownOpen, setDropdownOpen] = useState(null);
 
   const handleSingleSearch = async () => {
     setResults([]);
     setMessage('');
-    setCurrentPage(1);
+    setCurrentPages({});
+    setDropdownOpen(null); // Reseta o estado do dropdown
 
     if (keyword.trim() !== '') {
-      await searchByKeyword(keyword.trim());
+      await searchByKeyword(keyword.trim(), sources);
     }
   };
 
   const handleMultiSearch = async () => {
     setResults([]);
     setMessage('');
-    setCurrentPage(1);
+    setCurrentPages({});
+    setDropdownOpen(null); // Reseta o estado do dropdown
 
     for (let i = 0; i < keywords.length; i++) {
-      await searchByKeyword(keywords[i]);
+      await searchByKeyword(keywords[i], sources);
     }
   };
 
-  const searchByKeyword = async (keyword) => {
+  const searchByKeyword = async (keyword, sources) => {
     const selectedSources = Object.keys(sources).filter(source => sources[source]);
+    await performSearch(keyword, sources, selectedSources);
+  };
+
+  const performSearch = async (keyword, sources, selectedSources) => {
     const params = {
       keyword,
       iniciodia,
@@ -68,6 +75,11 @@ function News() {
       const response = await fetch(url);
       const data = await response.json();
       setResults(prevResults => [...prevResults, ...data]);
+      const newCurrentPages = {};
+      selectedSources.forEach(source => {
+        newCurrentPages[source] = 1;
+      });
+      setCurrentPages(newCurrentPages);
     } catch (error) {
       console.error('Erro ao comunicar com o backend:', error);
       setMessage('Erro ao comunicar com o backend.');
@@ -90,12 +102,17 @@ function News() {
     setSources(prevSources => ({ ...prevSources, [name]: checked }));
   };
 
-  const totalPages = Math.ceil(results.length / RESULTS_PER_PAGE);
+  const handlePageChange = (source, page) => {
+    setCurrentPages(prevPages => ({ ...prevPages, [source]: page }));
+  };
 
-  const displayedResults = results.slice(
-    (currentPage - 1) * RESULTS_PER_PAGE,
-    currentPage * RESULTS_PER_PAGE
-  );
+  const groupedResults = results.reduce((acc, result) => {
+    if (!acc[result.source]) {
+      acc[result.source] = [];
+    }
+    acc[result.source].push(result);
+    return acc;
+  }, {});
 
   return (
     <div>
@@ -114,14 +131,13 @@ function News() {
         setFimDia={setFimDia} setFimMes={setFimMes} setFimAno={setFimAno}
       />
       {message && <p>{message}</p>}
-      <SearchResults results={displayedResults} />
-      {totalPages > 1 && (
-        <Pagination 
-          currentPage={currentPage} 
-          totalPages={totalPages} 
-          setCurrentPage={setCurrentPage} 
-        />
-      )}
+      <SearchResults 
+        groupedResults={groupedResults} 
+        currentPages={currentPages} 
+        handlePageChange={handlePageChange} 
+        dropdownOpen={dropdownOpen}
+        setDropdownOpen={setDropdownOpen}
+      />
     </div>
   );
 }
@@ -152,69 +168,17 @@ function SearchBox({ keyword, setKeyword, handleSingleSearch, addKeyword, handle
         </div>
       </div>
       <div className="source-selection">
-        <label>
-          <input 
-            type="checkbox" 
-            name="folha" 
-            checked={sources.folha}
-            onChange={handleSourceChange} 
-          /> 
-          Folha
-        </label>
-        <label>
-          <input 
-            type="checkbox" 
-            name="g1" 
-            checked={sources.g1}
-            onChange={handleSourceChange} 
-          /> 
-          G1
-        </label>
-        <label>
-          <input 
-            type="checkbox" 
-            name="oglobo" 
-            checked={sources.oglobo}
-            onChange={handleSourceChange} 
-          /> 
-          O Globo
-        </label>
-        <label>
-          <input 
-            type="checkbox" 
-            name="cse" 
-            checked={sources.cse}
-            onChange={handleSourceChange} 
-          /> 
-          Uol
-        </label>
-        <label>
-          <input 
-            type="checkbox" 
-            name="correiobraziliense" 
-            checked={sources.correiobraziliense}
-            onChange={handleSourceChange} 
-          /> 
-          Correio Braziliense
-        </label>
-        <label>
-          <input 
-            type="checkbox" 
-            name="cnnbrasil" 
-            checked={sources.cnnbrasil}
-            onChange={handleSourceChange} 
-          /> 
-          CNN
-        </label>
-        <label>
-          <input 
-            type="checkbox" 
-            name="agenciabrasil" 
-            checked={sources.agenciabrasil}
-            onChange={handleSourceChange} 
-          /> 
-          Agência Brasil
-        </label>
+        {Object.keys(sources).map(source => (
+          <label key={source}>
+            <input 
+              type="checkbox" 
+              name={source} 
+              checked={sources[source]}
+              onChange={handleSourceChange} 
+            /> 
+            {source.charAt(0).toUpperCase() + source.slice(1)}
+          </label>
+        ))}
       </div>
     </div>
   );
@@ -296,15 +260,38 @@ function DateFilter({ setInicioDia, setInicioMes, setInicioAno, setFimDia, setFi
   );
 }
 
-function SearchResults({ results }) {
+function SearchResults({ groupedResults, currentPages, handlePageChange, dropdownOpen, setDropdownOpen }) {
+  useEffect(() => {
+    if (dropdownOpen && !(dropdownOpen in currentPages)) {
+      handlePageChange(dropdownOpen, 1);
+    }
+  }, [dropdownOpen, currentPages, handlePageChange]);
+
+  // Render results with dropdowns for all sources
   return (
     <div className="results-container">
-      {results.map((result, index) => (
-        <div key={index} className="result-item">
-          <a href={result.link} target="_blank" rel="noopener noreferrer">
-            <img src={result.image} alt="" className="thumbnail" />
-            <p>{result.title}</p>
-          </a>
+      {Object.keys(groupedResults).map(source => (
+        <div key={source}>
+          <button type="button" onClick={() => setDropdownOpen(dropdownOpen === source ? null : source)}>
+            {source.charAt(0).toUpperCase() + source.slice(1)}
+          </button>
+          {dropdownOpen === source && (
+            <div className="dropdown-content">
+              {groupedResults[source].slice((currentPages[source] - 1) * RESULTS_PER_PAGE, currentPages[source] * RESULTS_PER_PAGE).map((result, index) => (
+                <div key={index} className="result-item">
+                  <a href={result.link} target="_blank" rel="noopener noreferrer">
+                    {result.image && <img src={result.image} alt="" className="thumbnail" />}
+                    <p>{result.title}</p>
+                  </a>
+                </div>
+              ))}
+              <Pagination 
+                currentPage={currentPages[source] || 1} 
+                totalPages={Math.ceil(groupedResults[source].length / RESULTS_PER_PAGE)} 
+                setCurrentPage={(page) => handlePageChange(source, page)}
+              />
+            </div>
+          )}
         </div>
       ))}
     </div>
