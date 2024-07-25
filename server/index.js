@@ -68,7 +68,7 @@ app.get('/api/search', async (req, res) => {
     console.log(url);
     
     const rendertronUrl = `http://localhost:3000/render/${encodeURIComponent(url)}`;
-    const pdfUrl = `http://localhost:3000/pdf/${encodeURIComponent(url)}`;
+    // const pdfUrl = `http://localhost:3000/pdf/${encodeURIComponent(url)}`;
     const pdfDirectory = path.join(__dirname, 'server', 'pdfs');
   
     urls.push(rendertronUrl);
