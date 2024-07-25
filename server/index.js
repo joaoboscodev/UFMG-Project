@@ -4,6 +4,7 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs');
 const path = require('path');
+const moment = require('moment');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -84,6 +85,14 @@ app.get('/api/search', async (req, res) => {
     }
   }
 
+  if (sources.includes('correiobraziliense')) {
+    let url = `https://www.correiobraziliense.com.br/busca/?q=${keyword}`;
+    if (iniciodia && iniciomes && inicioano && fimdia && fimmes && fimano) {
+      url += `&from=${inicioano}-${iniciomes}-${iniciodia}&to=${fimano}-${fimmes}-${fimdia}`;
+    }
+    urls.push(url);
+  }
+
   if (sources.includes('cnnbrasil')) {
     let url = ` https://www.cnnbrasil.com.br/?s=${keyword}&orderby=date&order=desc`;
     if (iniciodia && iniciomes && inicioano && fimdia && fimmes && fimano) {
@@ -152,7 +161,19 @@ app.get('/api/search', async (req, res) => {
             const link = $(element).find('a').attr('href');
             const title = $(element).find('h2').text().trim();
             const image = $(element).find('img').attr('src');
-            results.push({ link, title, image, source: 'correiobraziliense' });
+            const dateText = $(element).find('small').text().trim();
+
+            // Extraindo a data e verificando o intervalo
+            const dateMatch = dateText.match(/postado em \d{2}:\d{2} - (\d{2}\/\d{2}\/\d{4})/);
+            if (dateMatch) {
+              const date = moment(dateMatch[1], 'DD/MM/YYYY');
+              const startDate = moment(`${inicioano}-${iniciomes}-${iniciodia}`, 'YYYY-MM-DD');
+              const endDate = moment(`${fimano}-${fimmes}-${fimdia}`, 'YYYY-MM-DD');
+
+              if (date.isBetween(startDate, endDate, null, '[]')) {
+                results.push({ link, title, image, date: date.format('YYYY-MM-DD'), source: 'correiobraziliense' });
+              }
+            }
           });
         } else if (url.includes('cnnbrasil.com.br')) {
           $('.home__list__tag').each((i, element) => {
@@ -165,7 +186,6 @@ app.get('/api/search', async (req, res) => {
           $('ul#results li').each((i, element) => {
             const link = $(element).find('.media-heading a').attr('href');
             const title = $(element).find('.media-heading a').text().trim();
-            // O HTML fornecido não inclui imagens para as notícias, então definimos como null
             const image = 'https://public.ebc.com.br/templates/logos/v3/logo-ebc.svg';
             results.push({ link, title, image, source: 'ebc' });
           });
