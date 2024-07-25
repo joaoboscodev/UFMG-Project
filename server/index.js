@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const cheerio = require('cheerio');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -11,6 +13,21 @@ app.use(express.json());
 
 app.get('/api', (req, res) => {
   res.json({ message: 'Hello from the server!' });
+});
+
+app.get('/api/test', (req, res) => {
+  console.log('Requisição recebida no backend');
+  res.json({ message: 'Comunicação com o backend bem-sucedida!' });
+});
+
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body;
+
+  if (username === 'user' && password === 'password') {
+    res.json({ message: 'Login successful!' });
+  } else {
+    res.status(401).json({ message: 'Invalid credentials' });
+  }
 });
 
 app.get('/api/search', async (req, res) => {
@@ -45,18 +62,26 @@ app.get('/api/search', async (req, res) => {
   if (sources.includes('cse')) {
     let url = `https://cse.google.com/cse?oe=utf8&ie=utf8&source=uds&q=${keyword}`;
     if (iniciodia && iniciomes && inicioano && fimdia && fimmes && fimano) {
-      url += `+after:${inicioano}-${iniciomes}-${iniciodia}+before:${fimano}-${fimmes}-${fimdia}`;
+      url += `+after:${inicioano}-${iniciomes}-${iniciodia}+before:${fimano}-${fimmes}-${fimdia}&lr=&safe=off&filter=0&gl=&cr=&as_sitesearch=*.uol.com.br/*&as_oq=&cx=33c20c29942ff412b&start=0#gsc.tab=0&gsc.q=${keyword}%20after%3A${inicioano}-${iniciomes}-${iniciodia}%20before%3A${fimano}-${fimmes}-${fimdia}&gsc.sort=date`;
     }
-    const rendertronUrl = `https://render-tron.appspot.com/render/${encodeURIComponent(url)}`;
+    console.log(url);
+    
+    const rendertronUrl = `http://localhost:3000/render/${encodeURIComponent(url)}`;
+    const pdfUrl = `http://localhost:3000/pdf/${encodeURIComponent(url)}`;
+    const pdfDirectory = path.join(__dirname, 'server', 'pdfs');
+  
     urls.push(rendertronUrl);
-  }
-
-  if (sources.includes('correiobraziliense')) {
-    let url = `https://www.correiobraziliense.com.br/busca/?q=${keyword}`;
-    if (iniciodia && iniciomes && inicioano && fimdia && fimmes && fimano) {
-      url += `&from=${inicioano}-${iniciomes}-${iniciodia}&to=${fimano}-${fimmes}-${fimdia}`;
+  
+    // Generate PDF for the page
+    try {
+      const pdfBuffer = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
+      const filePath = `./pdfs/page_${Date.now()}.pdf`;
+  
+      fs.writeFileSync(filePath, pdfBuffer.data);
+      console.log(`PDF saved at ${filePath}`);
+    } catch (error) {
+      console.error(`Failed to generate PDF for ${url}: ${error.message}`);
     }
-    urls.push(url);
   }
 
   if (sources.includes('cnnbrasil')) {
