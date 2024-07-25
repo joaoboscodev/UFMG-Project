@@ -267,7 +267,6 @@ function SearchResults({ groupedResults, currentPages, handlePageChange, dropdow
     }
   }, [dropdownOpen, currentPages, handlePageChange]);
 
-  // Render results with dropdowns for all sources
   return (
     <div className="results-container">
       {Object.keys(groupedResults).map(source => (
@@ -279,10 +278,11 @@ function SearchResults({ groupedResults, currentPages, handlePageChange, dropdow
             <div className="dropdown-content">
               {groupedResults[source].slice((currentPages[source] - 1) * RESULTS_PER_PAGE, currentPages[source] * RESULTS_PER_PAGE).map((result, index) => (
                 <div key={index} className="result-item">
-                  <a href={result.link} target="_blank" rel="noopener noreferrer">
-                    {result.image && <img src={result.image} alt="" className="thumbnail" />}
+                  {result.image && <img src={result.image} alt="" className="thumbnail" />}
+                  <div className="result-content">
                     <p>{result.title}</p>
-                  </a>
+                    <button onClick={() => window.open(result.link, '_blank')} className="link-button">Ler mais</button>
+                  </div>
                 </div>
               ))}
               <Pagination 
