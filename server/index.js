@@ -60,7 +60,7 @@ app.get('/api/search', async (req, res) => {
     urls.push(url);
   }
 
-  if (sources.includes('cse')) {
+  if (sources.includes('uol')) {
     let url = `https://cse.google.com/cse?oe=utf8&ie=utf8&source=uds&q=${keyword}`;
     if (iniciodia && iniciomes && inicioano && fimdia && fimmes && fimano) {
       url += `+after:${inicioano}-${iniciomes}-${iniciodia}+before:${fimano}-${fimmes}-${fimdia}&lr=&safe=off&filter=0&gl=&cr=&as_sitesearch=*.uol.com.br/*&as_oq=&cx=33c20c29942ff412b&start=0#gsc.tab=0&gsc.q=${keyword}%20after%3A${inicioano}-${iniciomes}-${iniciodia}%20before%3A${fimano}-${fimmes}-${fimdia}&gsc.sort=date`;
@@ -148,7 +148,7 @@ app.get('/api/search', async (req, res) => {
             const link = $(element).find('a.gs-title').attr('href');
             const title = $(element).find('a.gs-title').text().trim();
             const image = $(element).find('img.gs-image').attr('src');
-            results.push({ link, title, image, source: 'cse' });
+            results.push({ link, title, image, source: 'uol' });
           });
         } else if (url.includes('correiobraziliense.com.br')) {
           $('#search-results-item li').each((i, element) => {

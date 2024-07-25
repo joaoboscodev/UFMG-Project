@@ -22,7 +22,7 @@ function News() {
     folha: false,
     g1: false,
     oglobo: false,
-    cse: false,
+    uol: false,
     correiobraziliense: false,
     cnnbrasil: false,
     agenciabrasil: false,
