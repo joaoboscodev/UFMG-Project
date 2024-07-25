@@ -186,7 +186,7 @@ function SearchBox({ keyword, setKeyword, handleSingleSearch, addKeyword, handle
             checked={sources.cse}
             onChange={handleSourceChange} 
           /> 
-          CSE
+          Uol
         </label>
         <label>
           <input 
@@ -204,7 +204,7 @@ function SearchBox({ keyword, setKeyword, handleSingleSearch, addKeyword, handle
             checked={sources.cnnbrasil}
             onChange={handleSourceChange} 
           /> 
-          CNN Brasil
+          CNN
         </label>
         <label>
           <input 

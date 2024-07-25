@@ -87,17 +87,11 @@ app.get('/api/search', async (req, res) => {
 
   if (sources.includes('correiobraziliense')) {
     let url = `https://www.correiobraziliense.com.br/busca/?q=${keyword}`;
-    if (iniciodia && iniciomes && inicioano && fimdia && fimmes && fimano) {
-      url += `&from=${inicioano}-${iniciomes}-${iniciodia}&to=${fimano}-${fimmes}-${fimdia}`;
-    }
     urls.push(url);
   }
 
   if (sources.includes('cnnbrasil')) {
     let url = ` https://www.cnnbrasil.com.br/?s=${keyword}&orderby=date&order=desc`;
-    if (iniciodia && iniciomes && inicioano && fimdia && fimmes && fimano) {
-      url += `&from=${inicioano}-${iniciomes}-${iniciodia}&to=${fimano}-${fimmes}-${fimdia}`;
-    }
     urls.push(url);
   }
 
@@ -167,12 +161,15 @@ app.get('/api/search', async (req, res) => {
             const dateMatch = dateText.match(/postado em \d{2}:\d{2} - (\d{2}\/\d{2}\/\d{4})/);
             if (dateMatch) {
               const date = moment(dateMatch[1], 'DD/MM/YYYY');
-              const startDate = moment(`${inicioano}-${iniciomes}-${iniciodia}`, 'YYYY-MM-DD');
-              const endDate = moment(`${fimano}-${fimmes}-${fimdia}`, 'YYYY-MM-DD');
+              const startDate = iniciodia && iniciomes && inicioano ? moment(`${inicioano}-${iniciomes}-${iniciodia}`, 'YYYY-MM-DD') : null;
+              const endDate = fimdia && fimmes && fimano ? moment(`${fimano}-${fimmes}-${fimdia}`, 'YYYY-MM-DD') : null;
 
-              if (date.isBetween(startDate, endDate, null, '[]')) {
+              if ((!startDate || date.isSameOrAfter(startDate)) && (!endDate || date.isSameOrBefore(endDate))) {
                 results.push({ link, title, image, date: date.format('YYYY-MM-DD'), source: 'correiobraziliense' });
               }
+            } else {
+              // Sem filtro de data
+              results.push({ link, title, image, source: 'correiobraziliense' });
             }
           });
         } else if (url.includes('cnnbrasil.com.br')) {
@@ -180,7 +177,22 @@ app.get('/api/search', async (req, res) => {
             const link = $(element).attr('href');
             const title = $(element).find('.news-item-header__title').text().trim();
             const image = $(element).find('img').attr('src');
-            results.push({ link, title, image, source: 'cnnbrasil' });
+            const dateText = $(element).find('.home__title__date').text().trim();
+
+            // Extraindo a data e verificando o intervalo
+            const dateMatch = dateText.match(/(\d{2}\/\d{2}\/\d{4}) às \d{2}:\d{2}/);
+            if (dateMatch) {
+              const date = moment(dateMatch[1], 'DD/MM/YYYY');
+              const startDate = iniciodia && iniciomes && inicioano ? moment(`${inicioano}-${iniciomes}-${iniciodia}`, 'YYYY-MM-DD') : null;
+              const endDate = fimdia && fimmes && fimano ? moment(`${fimano}-${fimmes}-${fimdia}`, 'YYYY-MM-DD') : null;
+
+              if ((!startDate || date.isSameOrAfter(startDate)) && (!endDate || date.isSameOrBefore(endDate))) {
+                results.push({ link, title, image, date: date.format('YYYY-MM-DD'), source: 'cnnbrasil' });
+              }
+            } else {
+              // Sem filtro de data
+              results.push({ link, title, image, source: 'cnnbrasil' });
+            }
           });
         } else if (url.includes('busca.ebc.com.br')) {
           $('ul#results li').each((i, element) => {
