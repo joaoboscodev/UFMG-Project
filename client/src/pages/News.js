@@ -119,15 +119,17 @@ function News() {
   return (
     <div>
       <Header />
-      <SearchBox 
-        keyword={keyword} 
-        setKeyword={setKeyword} 
-        handleSingleSearch={handleSingleSearch} 
-        addKeyword={addKeyword} 
-        handleSourceChange={handleSourceChange} 
-        sources={sources} 
-      />
-      <KeywordsBox keywords={keywords} removeKeyword={removeKeyword} handleMultiSearch={handleMultiSearch} />
+      <div className="search-keywords-container">
+        <SearchBox 
+          keyword={keyword} 
+          setKeyword={setKeyword} 
+          handleSingleSearch={handleSingleSearch} 
+          addKeyword={addKeyword} 
+          handleSourceChange={handleSourceChange} 
+          sources={sources} 
+        />
+        <KeywordsBox keywords={keywords} removeKeyword={removeKeyword} handleMultiSearch={handleMultiSearch} />
+      </div>
       <DateFilter 
         setInicioDia={setInicioDia} setInicioMes={setInicioMes} setInicioAno={setInicioAno} 
         setFimDia={setFimDia} setFimMes={setFimMes} setFimAno={setFimAno}

@@ -1,25 +1,24 @@
 .header {
     display: flex;
     align-items: center;
-    justify-content: center;
-    background: linear-gradient(to top, #ac6565, #ff0000);
+    justify-content: left;
+    background: linear-gradient(to top, #4a4a4a, #1c1c1c);
     padding: 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    margin-bottom: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
   }
   
   .logo {
-    height: 60px;
+    height: 50px;
     margin-right: 20px;
   }
   
   .title {
-    flex: 1;
-    text-align: center;
-    margin: 0;
     font-size: 2rem;
     font-family: 'Arial', sans-serif;
     color: #fff;
-    text-shadow: -5px 8px 4px rgba(0, 0, 0, 0.5);
+    text-shadow: -1px 2px 4px rgba(0, 0, 0, 0.5);
   }
   

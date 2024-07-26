@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import Pagination from '../components/Pagination'
 import '../Styles/SearchResults.css';
 
 function SearchResults({ groupedResults, currentPages, handlePageChange, dropdownOpen, setDropdownOpen }) {

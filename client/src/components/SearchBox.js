@@ -2,6 +2,25 @@ import React from 'react';
 import '../Styles/SearchBox.css';
 
 function SearchBox({ keyword, setKeyword, handleSingleSearch, addKeyword, handleSourceChange, sources }) {
+  const getImageSource = (source) => {
+    switch (source) {
+      case 'folha':
+        return require('../images/FSP.png');
+      case 'g1':
+        return require('../images/g1.png');
+      case 'oglobo':
+        return require('../images/oglobo.png');
+      case 'uol':
+        return require('../images/uol.png');
+      case 'correiobraziliense':
+        return require('../images/cb.png');
+      case 'cnnbrasil':
+        return require('../images/cnn.png');
+      case 'agenciabrasil':
+        return require('../images/ab.png');      
+    }
+  };
+
   return (
     <div className="search-container">
       <div className="search-box-with-buttons">
@@ -19,14 +38,18 @@ function SearchBox({ keyword, setKeyword, handleSingleSearch, addKeyword, handle
       </div>
       <div className="source-selection">
         {Object.keys(sources).map(source => (
-          <label key={source}>
+          <label key={source} className="source-label">
             <input 
               type="checkbox" 
               name={source} 
               checked={sources[source]}
               onChange={handleSourceChange} 
-            /> 
-            {source.charAt(0).toUpperCase() + source.slice(1)}
+            />
+            <img 
+              src={getImageSource(source)} 
+              alt={source} 
+              className="source-image"
+            />
           </label>
         ))}
       </div>

@@ -1,0 +1,10 @@
+body {
+    background-color: #e4e2e2;
+}
+
+.search-keywords-container {
+  display: flex;
+  align-items: flex-start;
+  max-width: 1200px;
+  margin: 20px auto;
+}
