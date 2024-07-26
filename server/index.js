@@ -5,6 +5,8 @@ const cheerio = require('cheerio');
 const fs = require('fs');
 const path = require('path');
 const moment = require('moment');
+const { google } = require('googleapis');
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -229,6 +231,148 @@ app.post('/api/generate-pdf', async (req, res) => {
     res.status(500).send(`Failed to generate PDF: ${error.message}`);
   }
 });
+
+app.post('/api/save-to-drive', async (req, res) => {
+  const { url, keyword, source } = req.body;
+  
+  if (!url || !keyword || !source) {
+    return res.status(400).json({ message: 'Missing required fields: url, keyword, source' });
+  }
+
+  try {
+    await saveUrlToDrive(url, keyword, source);
+    res.json({ message: 'URL successfully saved to Google Drive!' });
+  } catch (error) {
+    console.error('Error saving URL to Drive:', error);
+    res.status(500).json({ message: 'Failed to save URL to Drive', error: error.message });
+  }
+});
+
+const SCOPES = ['https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/spreadsheets'];
+const TOKEN_PATH = 'token.json';
+const PARENT_FOLDER_ID = '1tyeq5P_wMJSbjH33hW9pYB4DsTfNMKR1';
+
+function authenticate() {
+    console.log('Starting authentication process...');
+    const credentials = JSON.parse(fs.readFileSync('credentials.json'));
+    const { client_secret, client_id, redirect_uris } = credentials.installed;
+    const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+
+    if (fs.existsSync(TOKEN_PATH)) {
+        console.log('Token found, using saved token.');
+        oAuth2Client.setCredentials(JSON.parse(fs.readFileSync(TOKEN_PATH)));
+        return oAuth2Client;
+    } else {
+        return getAccessToken(oAuth2Client);
+    }
+}
+
+function getAccessToken(oAuth2Client) {
+    const authUrl = oAuth2Client.generateAuthUrl({
+        access_type: 'offline',
+        scope: SCOPES,
+    });
+    console.log('Authorize this app by visiting this url:', authUrl);
+    return new Promise((resolve, reject) => {
+        const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout,
+        });
+        rl.question('Enter the code from that page here: ', (code) => {
+            rl.close();
+            oAuth2Client.getToken(code, (err, token) => {
+                if (err) {
+                    console.error('Error retrieving access token', err);
+                    reject(err);
+                }
+                oAuth2Client.setCredentials(token);
+                fs.writeFileSync(TOKEN_PATH, JSON.stringify(token));
+                console.log('Token stored to', TOKEN_PATH);
+                resolve(oAuth2Client);
+            });
+        });
+    });
+}
+
+async function saveUrlToDrive(url, keyword, source) {
+    const auth = await authenticate();
+    console.log('Starting save process...');
+    const drive = google.drive({ version: 'v3', auth });
+    const sheets = google.sheets({ version: 'v4', auth });
+
+    const currentDate = new Date().toLocaleDateString().replace(/\//g, '-');
+
+    const sourceFolderId = await findOrCreateFolder(drive, source, PARENT_FOLDER_ID);
+    const keywordFolderId = await findOrCreateFolder(drive, keyword, sourceFolderId);
+    const dateFolderId = await findOrCreateFolder(drive, currentDate, keywordFolderId);
+
+    await addUrlToSheet(sheets, drive, dateFolderId, currentDate, url);
+}
+
+async function findOrCreateFolder(drive, name, parentId) {
+    console.log(`Finding or creating folder: ${name}`);
+    const res = await drive.files.list({
+        q: `'${parentId}' in parents and name='${name}' and mimeType='application/vnd.google-apps.folder'`,
+        fields: 'files(id, name)',
+        spaces: 'drive',
+    });
+
+    if (res.data.files.length) {
+        console.log(`Folder ${name} exists with ID: ${res.data.files[0].id}`);
+        return res.data.files[0].id;
+    }
+
+    console.log(`Folder ${name} does not exist. Creating new folder.`);
+    const fileMetadata = {
+        'name': name,
+        'mimeType': 'application/vnd.google-apps.folder',
+        parents: [parentId]
+    };
+    const folder = await drive.files.create({
+        resource: fileMetadata,
+        fields: 'id'
+    });
+    console.log(`Created folder ${name} with ID: ${folder.data.id}`);
+    return folder.data.id;
+}
+
+async function addUrlToSheet(sheets, drive, folderId, sheetName, url) {
+    console.log(`Adding URL to sheet: ${sheetName}`);
+    const createResponse = await sheets.spreadsheets.create({
+        resource: {
+            properties: {
+                title: sheetName,
+            },
+            sheets: [{
+                properties: {
+                    title: 'Data',
+                }
+            }]
+        }
+    });
+
+    const spreadsheetId = createResponse.data.spreadsheetId;
+    console.log(`Created sheet with ID: ${spreadsheetId}`);
+
+    // Move the created spreadsheet to the correct folder
+    await drive.files.update({
+        fileId: spreadsheetId,
+        addParents: folderId,
+        removeParents: 'root', // Remove the default parent folder
+        fields: 'id, parents'
+    });
+
+    await sheets.spreadsheets.values.append({
+        spreadsheetId,
+        range: 'Data!A:A',
+        valueInputOption: 'RAW',
+        resource: {
+            values: [[url]]
+        }
+    });
+    console.log(`URL added to the sheet: ${url}`);
+}
+
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

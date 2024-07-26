@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
-import Pagination from '../components/Pagination'
+import Pagination from '../components/Pagination';
 import '../Styles/SearchResults.css';
 
-function SearchResults({ groupedResults, currentPages, handlePageChange, dropdownOpen, setDropdownOpen }) {
+function SearchResults({ groupedResults, currentPages, handlePageChange, dropdownOpen, setDropdownOpen, keyword }) {
   useEffect(() => {
     if (dropdownOpen && !(dropdownOpen in currentPages)) {
       handlePageChange(dropdownOpen, 1);
@@ -10,6 +10,7 @@ function SearchResults({ groupedResults, currentPages, handlePageChange, dropdow
   }, [dropdownOpen, currentPages, handlePageChange]);
 
   const generatePDF = async (link) => {
+    console.log('Generating PDF for link:', link);
     try {
       const response = await fetch('http://localhost:5000/api/generate-pdf', {
         method: 'POST',
@@ -22,6 +23,27 @@ function SearchResults({ groupedResults, currentPages, handlePageChange, dropdow
       console.log(data.message);
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
+    }
+  };
+
+  const saveToDrive = async (link, keyword, source) => {
+    console.log('Attempting to save to drive:');
+    console.log('Link:', link);
+    console.log('Keyword:', keyword);
+    console.log('Source:', source);
+
+    try {
+      const response = await fetch('http://localhost:5000/api/save-to-drive', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: link, keyword, source }),
+      });
+      const data = await response.json();
+      console.log('Save to Drive response:', data.message);
+    } catch (error) {
+      console.error('Erro ao salvar no Drive:', error);
     }
   };
 
@@ -41,6 +63,10 @@ function SearchResults({ groupedResults, currentPages, handlePageChange, dropdow
                     <p>{result.title}</p>
                     <button onClick={() => window.open(result.link, '_blank')} className="link-button">Ler mais</button>
                     <button onClick={() => generatePDF(result.link)} className="link-button">Gerar PDF</button>
+                    <button onClick={() => { 
+                      console.log('Botão "Enviar para o Drive" clicado');
+                      saveToDrive(result.link, keyword, source); 
+                    }} className="link-button">Enviar para o Drive</button>
                   </div>
                 </div>
               ))}

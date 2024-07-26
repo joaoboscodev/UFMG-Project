@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Header from '../components/Header';
 import SearchBox from '../components/SearchBox';
 import KeywordsBox from '../components/KeywordsBox';
@@ -141,6 +141,7 @@ function News() {
         handlePageChange={handlePageChange} 
         dropdownOpen={dropdownOpen}
         setDropdownOpen={setDropdownOpen}
+        keyword={keyword}  // Passando keyword como prop
       />
     </div>
   );
