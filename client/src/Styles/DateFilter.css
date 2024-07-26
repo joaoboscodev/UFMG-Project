@@ -1,0 +1,25 @@
+.date-filter-container {
+    display: flex;
+    justify-content: center;
+    margin: 20px;
+  }
+  
+  .date-filter {
+    margin: 0 10px;
+  }
+  
+  .date-filter label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+  
+  .date-filter input {
+    width: 80px;
+    padding: 5px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    outline: none;
+  }
+  
