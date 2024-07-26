@@ -50,6 +50,7 @@ app.get('/api/search', async (req, res) => {
       url += `&order=recent&from=${inicioano}-${iniciomes}-${iniciodia}T00%3A00%3A00-0300&to=${fimano}-${fimmes}-${fimdia}T23%3A59%3A59-0300`;
     }
     urls.push(url);
+    
   }
 
   if (sources.includes('oglobo')) {
@@ -68,21 +69,12 @@ app.get('/api/search', async (req, res) => {
     console.log(url);
     
     const rendertronUrl = `http://localhost:3000/render/${encodeURIComponent(url)}`;
-    // const pdfUrl = `http://localhost:3000/pdf/${encodeURIComponent(url)}`;
+    const pdfUrl = `http://localhost:3000/pdf/${encodeURIComponent(url)}`;
     const pdfDirectory = path.join(__dirname, 'server', 'pdfs');
   
     urls.push(rendertronUrl);
   
-    // Generate PDF for the page
-    try {
-      const pdfBuffer = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
-      const filePath = `./pdfs/page_${Date.now()}.pdf`;
-  
-      fs.writeFileSync(filePath, pdfBuffer.data);
-      console.log(`PDF saved at ${filePath}`);
-    } catch (error) {
-      console.error(`Failed to generate PDF for ${url}: ${error.message}`);
-    }
+    
   }
 
   if (sources.includes('correiobraziliense')) {
@@ -111,7 +103,7 @@ app.get('/api/search', async (req, res) => {
     for (const url of urls) {
       const response = await axios.get(url, {
         headers: {
-          'User-Agent': 'Rendertron',
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 7_6_5; en-US) AppleWebKit/600.40 (KHTML, like Gecko) Chrome/47.0.3795.304 Safari/601',
         },
       });
       if (response.status === 200) {
@@ -207,6 +199,34 @@ app.get('/api/search', async (req, res) => {
     res.json(results);
   } catch (error) {
     res.status(error.response ? error.response.status : 500).send(`Request failed with status code: ${error.response ? error.response.status : 'unknown'}`);
+  }
+});
+
+app.post('/api/generate-pdf', async (req, res) => {
+  const { articleUrl } = req.body;
+  if (!articleUrl) {
+    return res.status(400).send('Article URL is required');
+  }
+
+  try {
+    console.log(articleUrl);
+    const rendertronUrl = `http://localhost:3000/render/${encodeURIComponent(articleUrl)}`;
+    const pdfUrl = `http://localhost:3000/pdf/${encodeURIComponent(articleUrl)}`;
+    console.log(`Rendertron URL: ${rendertronUrl}`);
+    console.log(`PDF URL: ${pdfUrl}`);
+
+    // Gerar PDF usando Rendertron
+    const pdfBuffer = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
+
+    // Salvar PDF no servidor
+    const filePath = path.join(__dirname, 'rendertron', 'pdfs', `page_${Date.now()}.pdf`);
+    fs.writeFileSync(filePath, pdfBuffer.data);
+    console.log(`PDF saved at ${filePath}`);
+
+    res.json({ message: 'PDF generated successfully', filePath });
+  } catch (error) {
+    console.error(`Failed to generate PDF for ${articleUrl}: ${error.message}`);
+    res.status(500).send(`Failed to generate PDF: ${error.message}`);
   }
 });
 

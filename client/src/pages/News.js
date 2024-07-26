@@ -267,6 +267,24 @@ function SearchResults({ groupedResults, currentPages, handlePageChange, dropdow
     }
   }, [dropdownOpen, currentPages, handlePageChange]);
 
+  const generatePDF = async (link) => {
+    try {
+      const response = await fetch('http://localhost:5000/api/generate-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ articleUrl: link }),
+      });
+      const data = await response.json();
+      console.log(data.message);
+      // Opcional: você pode exibir uma mensagem de sucesso ou falha para o usuário
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      // Opcional: você pode exibir uma mensagem de erro para o usuário
+    }
+  };
+
   return (
     <div className="results-container">
       {Object.keys(groupedResults).map(source => (
@@ -282,6 +300,7 @@ function SearchResults({ groupedResults, currentPages, handlePageChange, dropdow
                   <div className="result-content">
                     <p>{result.title}</p>
                     <button onClick={() => window.open(result.link, '_blank')} className="link-button">Ler mais</button>
+                    <button onClick={() => generatePDF(result.link)} className="link-button">Gerar PDF</button>
                   </div>
                 </div>
               ))}
