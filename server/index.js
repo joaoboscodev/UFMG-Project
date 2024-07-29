@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const moment = require('moment');
 const { google } = require('googleapis');
+const readline = require('readline');
 
 
 const app = express();
@@ -36,172 +37,181 @@ app.post('/api/login', (req, res) => {
 app.get('/api/search', async (req, res) => {
   const { keyword, iniciodia, iniciomes, inicioano, fimdia, fimmes, fimano, source } = req.query;
   const sources = source ? source.split(',') : [];
+  const keywords = keyword ? keyword.split(',') : [];
 
-  let urls = [];
-  if (sources.includes('folha')) {
-    let url = `https://search.folha.uol.com.br/search?q=${keyword}`;
-    if (iniciodia && iniciomes && inicioano && fimdia && fimmes && fimano) {
-      url += `&periodo=personalizado&sd=${iniciodia}%2F${iniciomes}%2F${inicioano}&ed=${fimdia}%2F${fimmes}%2F${fimano}&site=todos`;
+  let resultsBySource = {};
+
+  for (const source of sources) {
+    resultsBySource[source] = {};
+  }
+
+  for (const kw of keywords) {
+    let urls = [];
+    if (sources.includes('folha')) {
+      let url = `https://search.folha.uol.com.br/search?q=${kw}`;
+      if (iniciodia && iniciomes && inicioano && fimdia && fimmes && fimano) {
+        url += `&periodo=personalizado&sd=${iniciodia}%2F${iniciomes}%2F${inicioano}&ed=${fimdia}%2F${fimmes}%2F${fimano}&site=todos`;
+      }
+      urls.push({ url, source: 'folha', keyword: kw });
     }
-    urls.push(url);
-  }
 
-  if (sources.includes('g1')) {
-    let url = `https://g1.globo.com/busca/?q=${keyword}`;
-    if (iniciodia && iniciomes && inicioano && fimdia && fimmes && fimano) {
-      url += `&order=recent&from=${inicioano}-${iniciomes}-${iniciodia}T00%3A00%3A00-0300&to=${fimano}-${fimmes}-${fimdia}T23%3A59%3A59-0300`;
+    if (sources.includes('g1')) {
+      let url = `https://g1.globo.com/busca/?q=${kw}`;
+      if (iniciodia && iniciomes && inicioano && fimdia && fimmes && fimano) {
+        url += `&order=recent&from=${inicioano}-${iniciomes}-${iniciodia}T00%3A00%3A00-0300&to=${fimano}-${fimmes}-${fimdia}T23%3A59%3A59-0300`;
+      }
+      urls.push({ url, source: 'g1', keyword: kw });
     }
-    urls.push(url);
-    
-  }
 
-  if (sources.includes('oglobo')) {
-    let url = `https://oglobo.globo.com/busca/?q=${keyword}`;
-    if (iniciodia && iniciomes && inicioano && fimdia && fimmes && fimano) {
-      url += `&order=recent&from=${inicioano}-${iniciomes}-${iniciodia}T00%3A00%3A00-0300&to=${fimano}-${fimmes}-${fimdia}T23%3A59%3A59-0300`;
+    if (sources.includes('oglobo')) {
+      let url = `https://oglobo.globo.com/busca/?q=${kw}`;
+      if (iniciodia && iniciomes && inicioano && fimdia && fimmes && fimano) {
+        url += `&order=recent&from=${inicioano}-${iniciomes}-${iniciodia}T00%3A00%3A00-0300&to=${fimano}-${fimmes}-${fimdia}T23%3A59%3A59-0300`;
+      }
+      urls.push({ url, source: 'oglobo', keyword: kw });
     }
-    urls.push(url);
-  }
 
-  if (sources.includes('uol')) {
-    let url = `https://cse.google.com/cse?oe=utf8&ie=utf8&source=uds&q=${keyword}`;
-    if (iniciodia && iniciomes && inicioano && fimdia && fimmes && fimano) {
-      url += `+after:${inicioano}-${iniciomes}-${iniciodia}+before:${fimano}-${fimmes}-${fimdia}&lr=&safe=off&filter=0&gl=&cr=&as_sitesearch=*.uol.com.br/*&as_oq=&cx=33c20c29942ff412b&start=0#gsc.tab=0&gsc.q=${keyword}%20after%3A${inicioano}-${iniciomes}-${iniciodia}%20before%3A${fimano}-${fimmes}-${fimdia}&gsc.sort=date`;
+    if (sources.includes('uol')) {
+      let url = `https://cse.google.com/cse?oe=utf8&ie=utf8&source=uds&q=${kw}`;
+      if (iniciodia && iniciomes && inicioano && fimdia && fimmes && fimano) {
+        url += `+after:${inicioano}-${iniciomes}-${iniciodia}+before:${fimano}-${fimmes}-${fimdia}&lr=&safe=off&filter=0&gl=&cr=&as_sitesearch=*.uol.com.br/*&as_oq=&cx=33c20c29942ff412b&start=0#gsc.tab=0&gsc.q=${kw}%20after%3A${inicioano}-${iniciomes}-${iniciodia}%20before%3A${fimano}-${fimmes}-${fimdia}&gsc.sort=date`;
+      }
+      console.log(url);
+
+      const rendertronUrl = `http://localhost:3000/render/${encodeURIComponent(url)}`;
+      urls.push({ url: rendertronUrl, source: 'uol', keyword: kw });
     }
-    console.log(url);
-    
-    const rendertronUrl = `http://localhost:3000/render/${encodeURIComponent(url)}`;
-    const pdfUrl = `http://localhost:3000/pdf/${encodeURIComponent(url)}`;
-    const pdfDirectory = path.join(__dirname, 'server', 'pdfs');
-  
-    urls.push(rendertronUrl);
-  
-    
-  }
 
-  if (sources.includes('correiobraziliense')) {
-    let url = `https://www.correiobraziliense.com.br/busca/?q=${keyword}`;
-    urls.push(url);
-  }
-
-  if (sources.includes('cnnbrasil')) {
-    let url = ` https://www.cnnbrasil.com.br/?s=${keyword}&orderby=date&order=desc`;
-    urls.push(url);
-  }
-
-  if (sources.includes('agenciabrasil')) {
-    let url = `https://busca.ebc.com.br/nodes?q=${encodeURIComponent(keyword)}&site_id=agenciabrasil&utf8=%E2%9C%93`;
-    if (iniciodia && iniciomes && inicioano && fimdia && fimmes && fimano) {
-      const startDate = `${iniciodia}%2F${iniciomes}%2F${inicioano}`;
-      const endDate = `${fimdia}%2F${fimmes}%2F${fimano}`;
-      url += `&start_date=${startDate}&end_date=${endDate}&commit=Aplicar`;
+    if (sources.includes('correiobraziliense')) {
+      let url = `https://www.correiobraziliense.com.br/busca/?q=${kw}`;
+      urls.push({ url, source: 'correiobraziliense', keyword: kw });
     }
-    urls.push(url);
-  }
-  
 
-  try {
-    const results = [];
-    for (const url of urls) {
-      const response = await axios.get(url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 7_6_5; en-US) AppleWebKit/600.40 (KHTML, like Gecko) Chrome/47.0.3795.304 Safari/601',
-        },
-      });
-      if (response.status === 200) {
-        const html = response.data;
-        const $ = cheerio.load(html);
-        if (url.includes('folha.uol.com.br')) {
-          $('ol.c-search .c-headline__wrapper').each((i, element) => {
-            const link = $(element).find('a').attr('href');
-            const title = $(element).find('.c-headline__title').text().trim();
-            results.push({ link, title, source: 'folha' });
-          });
-          $('ol.c-search .c-headline__media-wrapper').each((i, element) => {
-            const image = $(element).find('img').attr('src');
-            if (results[i]) {
-              results[i].image = image;
-            }
-          });
-        } else if (url.includes('g1.globo.com')) {
-          $('li.widget--card.widget--info').each((i, element) => {
-            const link = $(element).find('a').attr('href');
-            const title = $(element).find('.widget--info__title').text().trim();
-            const image = $(element).find('img').attr('src');
-            results.push({ link, title, image, source: 'g1' });
-          });
-        } else if (url.includes('oglobo.globo.com')) {
-          $('li.widget--card.widget--info').each((i, element) => {
-            const link = $(element).find('a').attr('href');
-            const title = $(element).find('.widget--info__title').text().trim();
-            const image = $(element).find('img').attr('src');
-            results.push({ link, title, image, source: 'oglobo' });
-          });
-        } else if (url.includes('cse.google.com')) {
-          $('div.gsc-webResult.gsc-result').each((i, element) => {
-            const link = $(element).find('a.gs-title').attr('href');
-            const title = $(element).find('a.gs-title').text().trim();
-            const image = $(element).find('img.gs-image').attr('src');
-            results.push({ link, title, image, source: 'uol' });
-          });
-        } else if (url.includes('correiobraziliense.com.br')) {
-          $('#search-results-item li').each((i, element) => {
-            const link = $(element).find('a').attr('href');
-            const title = $(element).find('h2').text().trim();
-            const image = $(element).find('img').attr('src');
-            const dateText = $(element).find('small').text().trim();
+    if (sources.includes('cnnbrasil')) {
+      let url = ` https://www.cnnbrasil.com.br/?s=${kw}&orderby=date&order=desc`;
+      urls.push({ url, source: 'cnnbrasil', keyword: kw });
+    }
 
-            // Extraindo a data e verificando o intervalo
-            const dateMatch = dateText.match(/postado em \d{2}:\d{2} - (\d{2}\/\d{2}\/\d{4})/);
-            if (dateMatch) {
-              const date = moment(dateMatch[1], 'DD/MM/YYYY');
-              const startDate = iniciodia && iniciomes && inicioano ? moment(`${inicioano}-${iniciomes}-${iniciodia}`, 'YYYY-MM-DD') : null;
-              const endDate = fimdia && fimmes && fimano ? moment(`${fimano}-${fimmes}-${fimdia}`, 'YYYY-MM-DD') : null;
+    if (sources.includes('agenciabrasil')) {
+      let url = `https://busca.ebc.com.br/nodes?q=${encodeURIComponent(kw)}&site_id=agenciabrasil&utf8=%E2%9C%93`;
+      if (iniciodia && iniciomes && inicioano && fimdia && fimmes && fimano) {
+        const startDate = `${iniciodia}%2F${iniciomes}%2F${inicioano}`;
+        const endDate = `${fimdia}%2F${fimmes}%2F${fimano}`;
+        url += `&start_date=${startDate}&end_date=${endDate}&commit=Aplicar`;
+      }
+      urls.push({ url, source: 'agenciabrasil', keyword: kw });
+    }
 
-              if ((!startDate || date.isSameOrAfter(startDate)) && (!endDate || date.isSameOrBefore(endDate))) {
-                results.push({ link, title, image, date: date.format('YYYY-MM-DD'), source: 'correiobraziliense' });
+    try {
+      for (const { url, source, keyword } of urls) {
+        const response = await axios.get(url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 7_6_5; en-US) AppleWebKit/600.40 (KHTML, like Gecko) Chrome/47.0.3795.304 Safari/601',
+          },
+        });
+
+        if (response.status === 200) {
+          const html = response.data;
+          const $ = cheerio.load(html);
+          const results = [];
+
+          // Example parsing logic for 'folha'
+          if (url.includes('folha.uol.com.br')) {
+            $('ol.c-search .c-headline__wrapper').each((i, element) => {
+              const link = $(element).find('a').attr('href');
+              const title = $(element).find('.c-headline__title').text().trim();
+              results.push({ link, title, source: 'folha', keyword });
+            });
+            $('ol.c-search .c-headline__media-wrapper').each((i, element) => {
+              const image = $(element).find('img').attr('src');
+              if (results[i]) {
+                results[i].image = image;
               }
-            } else {
-              // Sem filtro de data
-              results.push({ link, title, image, source: 'correiobraziliense' });
-            }
-          });
-        } else if (url.includes('cnnbrasil.com.br')) {
-          $('.home__list__tag').each((i, element) => {
-            const link = $(element).attr('href');
-            const title = $(element).find('.news-item-header__title').text().trim();
-            const image = $(element).find('img').attr('src');
-            const dateText = $(element).find('.home__title__date').text().trim();
+            });
+          } else if (url.includes('g1.globo.com')) {
+            $('li.widget--card.widget--info').each((i, element) => {
+              const link = $(element).find('a').attr('href');
+              const title = $(element).find('.widget--info__title').text().trim();
+              const image = $(element).find('img').attr('src');
+              results.push({ link, title, image, source: 'g1', keyword });
+            });
+          } else if (url.includes('oglobo.globo.com')) {
+            $('li.widget--card.widget--info').each((i, element) => {
+              const link = $(element).find('a').attr('href');
+              const title = $(element).find('.widget--info__title').text().trim();
+              const image = $(element).find('img').attr('src');
+              results.push({ link, title, image, source: 'oglobo', keyword });
+            });
+          } else if (url.includes('cse.google.com')) {
+            $('div.gsc-webResult.gsc-result').each((i, element) => {
+              const link = $(element).find('a.gs-title').attr('href');
+              const title = $(element).find('a.gs-title').text().trim();
+              const image = $(element).find('img.gs-image').attr('src');
+              results.push({ link, title, image, source: 'uol', keyword });
+            });
+          } else if (url.includes('correiobraziliense.com.br')) {
+            $('#search-results-item li').each((i, element) => {
+              const link = $(element).find('a').attr('href');
+              const title = $(element).find('h2').text().trim();
+              const image = $(element).find('img').attr('src');
+              const dateText = $(element).find('small').text().trim();
 
-            // Extraindo a data e verificando o intervalo
-            const dateMatch = dateText.match(/(\d{2}\/\d{2}\/\d{4}) às \d{2}:\d{2}/);
-            if (dateMatch) {
-              const date = moment(dateMatch[1], 'DD/MM/YYYY');
-              const startDate = iniciodia && iniciomes && inicioano ? moment(`${inicioano}-${iniciomes}-${iniciodia}`, 'YYYY-MM-DD') : null;
-              const endDate = fimdia && fimmes && fimano ? moment(`${fimano}-${fimmes}-${fimdia}`, 'YYYY-MM-DD') : null;
+              // Extracting the date and checking the range
+              const dateMatch = dateText.match(/postado em \d{2}:\d{2} - (\d{2}\/\d{2}\/\d{4})/);
+              if (dateMatch) {
+                const date = moment(dateMatch[1], 'DD/MM/YYYY');
+                const startDate = iniciodia && iniciomes && inicioano ? moment(`${inicioano}-${iniciomes}-${iniciodia}`, 'YYYY-MM-DD') : null;
+                const endDate = fimdia && fimmes && fimano ? moment(`${fimano}-${fimmes}-${fimdia}`, 'YYYY-MM-DD') : null;
 
-              if ((!startDate || date.isSameOrAfter(startDate)) && (!endDate || date.isSameOrBefore(endDate))) {
-                results.push({ link, title, image, date: date.format('YYYY-MM-DD'), source: 'cnnbrasil' });
+                if ((!startDate || date.isSameOrAfter(startDate)) && (!endDate || date.isSameOrBefore(endDate))) {
+                  results.push({ link, title, image, date: date.format('YYYY-MM-DD'), source: 'correiobraziliense', keyword });
+                }
+              } else {
+                results.push({ link, title, image, source: 'correiobraziliense', keyword });
               }
-            } else {
-              // Sem filtro de data
-              results.push({ link, title, image, source: 'cnnbrasil' });
-            }
-          });
-        } else if (url.includes('busca.ebc.com.br')) {
-          $('ul#results li').each((i, element) => {
-            const link = $(element).find('.media-heading a').attr('href');
-            const title = $(element).find('.media-heading a').text().trim();
-            const image = 'https://public.ebc.com.br/templates/logos/v3/logo-ebc.svg';
-            results.push({ link, title, image, source: 'ebc' });
-          });
+            });
+          } else if (url.includes('cnnbrasil.com.br')) {
+            $('.home__list__tag').each((i, element) => {
+              const link = $(element).attr('href');
+              const title = $(element).find('.news-item-header__title').text().trim();
+              const image = $(element).find('img').attr('src');
+              const dateText = $(element).find('.home__title__date').text().trim();
+
+              // Extracting the date and checking the range
+              const dateMatch = dateText.match(/(\d{2}\/\d{2}\/\d{4}) às \d{2}:\d{2}/);
+              if (dateMatch) {
+                const date = moment(dateMatch[1], 'DD/MM/YYYY');
+                const startDate = iniciodia && iniciomes && inicioano ? moment(`${inicioano}-${iniciomes}-${iniciodia}`, 'YYYY-MM-DD') : null;
+                const endDate = fimdia && fimmes && fimano ? moment(`${fimano}-${fimmes}-${fimdia}`, 'YYYY-MM-DD') : null;
+
+                if ((!startDate || date.isSameOrAfter(startDate)) && (!endDate || date.isSameOrBefore(endDate))) {
+                  results.push({ link, title, image, date: date.format('YYYY-MM-DD'), source: 'cnnbrasil', keyword });
+                }
+              } else {
+                results.push({ link, title, image, source: 'cnnbrasil', keyword });
+              }
+            });
+          } else if (url.includes('busca.ebc.com.br')) {
+            $('ul#results li').each((i, element) => {
+              const link = $(element).find('.media-heading a').attr('href');
+              const title = $(element).find('.media-heading a').text().trim();
+              const image = 'https://public.ebc.com.br/templates/logos/v3/logo-ebc.svg';
+              results.push({ link, title, image, source: 'ebc', keyword });
+            });
+          }
+
+          // Assign results to the source and keyword
+          if (!resultsBySource[source]) resultsBySource[source] = {};
+          resultsBySource[source][keyword] = results;
         }
       }
+    } catch (error) {
+      console.error(`Error fetching results for keyword: ${kw}, source: ${source}`, error);
+      res.status(error.response ? error.response.status : 500).send(`Request failed with status code: ${error.response ? error.response.status : 'unknown'}`);
     }
-    res.json(results);
-  } catch (error) {
-    res.status(error.response ? error.response.status : 500).send(`Request failed with status code: ${error.response ? error.response.status : 'unknown'}`);
   }
+
+  res.json(resultsBySource);
 });
 
 app.post('/api/generate-pdf', async (req, res) => {
@@ -229,22 +239,6 @@ app.post('/api/generate-pdf', async (req, res) => {
   } catch (error) {
     console.error(`Failed to generate PDF for ${articleUrl}: ${error.message}`);
     res.status(500).send(`Failed to generate PDF: ${error.message}`);
-  }
-});
-
-app.post('/api/save-to-drive', async (req, res) => {
-  const { url, keyword, source } = req.body;
-  
-  if (!url || !keyword || !source) {
-    return res.status(400).json({ message: 'Missing required fields: url, keyword, source' });
-  }
-
-  try {
-    await saveUrlToDrive(url, keyword, source);
-    res.json({ message: 'URL successfully saved to Google Drive!' });
-  } catch (error) {
-    console.error('Error saving URL to Drive:', error);
-    res.status(500).json({ message: 'Failed to save URL to Drive', error: error.message });
   }
 });
 
@@ -294,7 +288,7 @@ function getAccessToken(oAuth2Client) {
     });
 }
 
-async function saveUrlToDrive(url, keyword, source) {
+async function saveUrlToDrive(url, keyword, source,) {
     const auth = await authenticate();
     console.log('Starting save process...');
     const drive = google.drive({ version: 'v3', auth });
@@ -309,7 +303,7 @@ async function saveUrlToDrive(url, keyword, source) {
     await addUrlToSheet(sheets, drive, dateFolderId, currentDate, url);
 }
 
-async function findOrCreateFolder(drive, name, parentId) {
+async function findOrCreateFolder(drive, name, parentId,) {
     console.log(`Finding or creating folder: ${name}`);
     const res = await drive.files.list({
         q: `'${parentId}' in parents and name='${name}' and mimeType='application/vnd.google-apps.folder'`,
@@ -338,40 +332,79 @@ async function findOrCreateFolder(drive, name, parentId) {
 
 async function addUrlToSheet(sheets, drive, folderId, sheetName, url) {
     console.log(`Adding URL to sheet: ${sheetName}`);
-    const createResponse = await sheets.spreadsheets.create({
-        resource: {
-            properties: {
-                title: sheetName,
-            },
-            sheets: [{
+    let spreadsheetId = null;
+
+    // Check if the spreadsheet already exists
+    const res = await drive.files.list({
+        q: `'${folderId}' in parents and name='${sheetName}' and mimeType='application/vnd.google-apps.spreadsheet'`,
+        fields: 'files(id, name)',
+        spaces: 'drive',
+    });
+
+    if (res.data.files.length > 0) {
+        // Spreadsheet exists, use the existing one
+        spreadsheetId = res.data.files[0].id;
+        console.log(`Spreadsheet with ID ${spreadsheetId} already exists.`);
+    } else {
+        // Spreadsheet does not exist, create a new one
+        const createResponse = await sheets.spreadsheets.create({
+            resource: {
                 properties: {
-                    title: 'Data',
-                }
-            }]
-        }
-    });
+                    title: sheetName,
+                },
+                sheets: [{
+                    properties: {
+                        title: 'Data',
+                    }
+                }]
+            }
+        });
 
-    const spreadsheetId = createResponse.data.spreadsheetId;
-    console.log(`Created sheet with ID: ${spreadsheetId}`);
+        spreadsheetId = createResponse.data.spreadsheetId;
+        console.log(`Created sheet with ID: ${spreadsheetId}`);
 
-    // Move the created spreadsheet to the correct folder
-    await drive.files.update({
-        fileId: spreadsheetId,
-        addParents: folderId,
-        removeParents: 'root', // Remove the default parent folder
-        fields: 'id, parents'
-    });
+        // Move the created spreadsheet to the correct folder
+        await drive.files.update({
+            fileId: spreadsheetId,
+            addParents: folderId,
+            removeParents: 'root', // Remove the default parent folder
+            fields: 'id, parents'
+        });
+    }
+
+    // Add URL to the sheet as a clickable link
+    const range = 'Data!A:A';
+    const values = [
+        [`=HYPERLINK("${url}"; "${url}")`]
+    ];
 
     await sheets.spreadsheets.values.append({
         spreadsheetId,
-        range: 'Data!A:A',
-        valueInputOption: 'RAW',
+        range,
+        valueInputOption: 'USER_ENTERED',
         resource: {
-            values: [[url]]
+            values
         }
     });
+
     console.log(`URL added to the sheet: ${url}`);
 }
+
+app.post('/api/save-to-drive', async (req, res) => {
+    const { url, keyword, source } = req.body;
+
+    if (!url || !keyword || !source) {
+        return res.status(400).json({ message: 'Missing required fields: url, keyword, source' });
+    }
+
+    try {
+        await saveUrlToDrive(url, keyword, source);
+        res.json({ message: 'URL successfully saved to Google Drive!' });
+    } catch (error) {
+        console.error('Error saving URL to Drive:', error);
+        res.status(500).json({ message: 'Failed to save URL to Drive', error: error.message });
+    }
+});
 
 
 app.listen(PORT, () => {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import '../Styles/SearchBox.css';
 
 function SearchBox({ keyword, setKeyword, handleSingleSearch, addKeyword, handleSourceChange, sources }) {
@@ -17,7 +17,9 @@ function SearchBox({ keyword, setKeyword, handleSingleSearch, addKeyword, handle
       case 'cnnbrasil':
         return require('../images/cnn.png');
       case 'agenciabrasil':
-        return require('../images/ab.png');      
+        return require('../images/ab.png');
+      default:
+        return '';
     }
   };
 

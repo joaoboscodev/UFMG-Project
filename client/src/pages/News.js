@@ -16,7 +16,7 @@ function News() {
   const [fimdia, setFimDia] = useState('');
   const [fimmes, setFimMes] = useState('');
   const [fimano, setFimAno] = useState('');
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState({});
   const [message, setMessage] = useState('');
   const [currentPages, setCurrentPages] = useState({});
   const [keywords, setKeywords] = useState([]);
@@ -32,7 +32,7 @@ function News() {
   const [dropdownOpen, setDropdownOpen] = useState(null);
 
   const handleSingleSearch = async () => {
-    setResults([]);
+    setResults({});
     setMessage('');
     setCurrentPages({});
     setDropdownOpen(null);
@@ -43,7 +43,7 @@ function News() {
   };
 
   const handleMultiSearch = async () => {
-    setResults([]);
+    setResults({});
     setMessage('');
     setCurrentPages({});
     setDropdownOpen(null);
@@ -55,10 +55,10 @@ function News() {
 
   const searchByKeyword = async (keyword, sources) => {
     const selectedSources = Object.keys(sources).filter(source => sources[source]);
-    await performSearch(keyword, sources, selectedSources);
+    await performSearch(keyword, selectedSources);
   };
 
-  const performSearch = async (keyword, sources, selectedSources) => {
+  const performSearch = async (keyword, selectedSources) => {
     const params = {
       keyword,
       iniciodia,
@@ -76,7 +76,23 @@ function News() {
     try {
       const response = await fetch(url);
       const data = await response.json();
-      setResults(prevResults => [...prevResults, ...data]);
+      if (typeof data !== 'object' || !data) {
+        setMessage('No valid data received.');
+        return;
+      }
+      
+      setResults(prevResults => {
+        const newResults = { ...prevResults };
+        Object.keys(data).forEach(source => {
+          if (!newResults[source]) newResults[source] = {};
+          Object.keys(data[source]).forEach(keyword => {
+            if (!newResults[source][keyword]) newResults[source][keyword] = [];
+            newResults[source][keyword].push(...data[source][keyword]);
+          });
+        });
+        return newResults;
+      });
+
       const newCurrentPages = {};
       selectedSources.forEach(source => {
         newCurrentPages[source] = 1;
@@ -104,17 +120,12 @@ function News() {
     setSources(prevSources => ({ ...prevSources, [name]: checked }));
   };
 
-  const handlePageChange = (source, page) => {
-    setCurrentPages(prevPages => ({ ...prevPages, [source]: page }));
+  const handlePageChange = (source, keyword, page) => {
+    setCurrentPages(prevPages => ({
+      ...prevPages,
+      [source]: { ...prevPages[source], [keyword]: page }
+    }));
   };
-
-  const groupedResults = results.reduce((acc, result) => {
-    if (!acc[result.source]) {
-      acc[result.source] = [];
-    }
-    acc[result.source].push(result);
-    return acc;
-  }, {});
 
   return (
     <div>
@@ -136,12 +147,12 @@ function News() {
       />
       {message && <p>{message}</p>}
       <SearchResults 
-        groupedResults={groupedResults} 
+        groupedResults={results} 
         currentPages={currentPages} 
         handlePageChange={handlePageChange} 
         dropdownOpen={dropdownOpen}
         setDropdownOpen={setDropdownOpen}
-        keyword={keyword}  // Passando keyword como prop
+        keyword={keyword}
       />
     </div>
   );

@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import Pagination from '../components/Pagination';
 import '../Styles/SearchResults.css';
 
-function SearchResults({ groupedResults, currentPages, handlePageChange, dropdownOpen, setDropdownOpen, keyword }) {
+function SearchResults({ groupedResults, currentPages, handlePageChange, dropdownOpen, setDropdownOpen }) {
   useEffect(() => {
     if (dropdownOpen && !(dropdownOpen in currentPages)) {
       handlePageChange(dropdownOpen, 1);
@@ -56,25 +56,30 @@ function SearchResults({ groupedResults, currentPages, handlePageChange, dropdow
           </button>
           {dropdownOpen === source && (
             <div className="dropdown-content">
-              {groupedResults[source].slice((currentPages[source] - 1) * 5, currentPages[source] * 5).map((result, index) => (
-                <div key={index} className="result-item">
-                  {result.image && <img src={result.image} alt="" className="thumbnail" />}
-                  <div className="result-content">
-                    <p>{result.title}</p>
-                    <button onClick={() => window.open(result.link, '_blank')} className="link-button">Ler mais</button>
-                    <button onClick={() => generatePDF(result.link)} className="link-button">Gerar PDF</button>
-                    <button onClick={() => { 
-                      console.log('Botão "Enviar para o Drive" clicado');
-                      saveToDrive(result.link, keyword, source); 
-                    }} className="link-button">Enviar para o Drive</button>
-                  </div>
+              {Object.keys(groupedResults[source]).map(keyword => (
+                <div key={keyword} className="keyword-group">
+                  <h4>Keyword: {keyword}</h4>
+                  {groupedResults[source][keyword].map((result, index) => (
+                    <div key={index} className="result-item">
+                      {result.image && <img src={result.image} alt="" className="thumbnail" />}
+                      <div className="result-content">
+                        <p>{result.title}</p>
+                        <button onClick={() => window.open(result.link, '_blank')} className="link-button">Ler mais</button>
+                        <button onClick={() => generatePDF(result.link)} className="link-button">Gerar PDF</button>
+                        <button onClick={() => { 
+                          console.log('Botão "Enviar para o Drive" clicado');
+                          saveToDrive(result.link, keyword, source); 
+                        }} className="link-button">Enviar para o Drive</button>
+                      </div>
+                    </div>
+                  ))}
+                  <Pagination 
+                    currentPage={currentPages[source] ? currentPages[source][keyword] || 1 : 1} 
+                    totalPages={Math.ceil(groupedResults[source][keyword].length / 5)} 
+                    setCurrentPage={(page) => handlePageChange(source, keyword, page)}
+                  />
                 </div>
               ))}
-              <Pagination 
-                currentPage={currentPages[source] || 1} 
-                totalPages={Math.ceil(groupedResults[source].length / 5)} 
-                setCurrentPage={(page) => handlePageChange(source, page)}
-              />
             </div>
           )}
         </div>
