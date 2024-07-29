@@ -52,7 +52,7 @@ function SearchResults({ groupedResults, currentPages, handlePageChange, dropdow
     <div className="results-container">
       {Object.keys(groupedResults).map(source => (
         <div key={source}>
-          <button type="button" onClick={() => setDropdownOpen(dropdownOpen === source ? null : source)}>
+          <button className="dropdown-button" type="button" onClick={() => setDropdownOpen(dropdownOpen === source ? null : source)}>
             {source.charAt(0).toUpperCase() + source.slice(1)}
           </button>
           {dropdownOpen === source && (

@@ -82,3 +82,27 @@
 .icon-space {
   margin-right: 4px; /* Adiciona espaço à direita do ícone */
 }
+
+/* Adicione esta seção ao seu arquivo SearchResults.css */
+
+.dropdown-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 15px;
+  border: none;
+  background-color: #007BFF; /* Azul principal */
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
+  transition: background-color 0.3s ease-in-out, transform 0.2s ease;
+  text-align: center;
+  margin-bottom: 10px; /* Espaçamento inferior para separação visual */
+}
+
+.dropdown-button:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px); /* Efeito de elevação */
+}
