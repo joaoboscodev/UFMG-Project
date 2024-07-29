@@ -8,3 +8,7 @@ body {
   max-width: 1200px;
   margin: 20px auto;
 }
+
+.keywords-container {
+  margin-left: -100px;
+}
