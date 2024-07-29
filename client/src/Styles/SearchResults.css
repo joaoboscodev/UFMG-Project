@@ -70,6 +70,12 @@
   background-color: #c9302c;
 }
 
+.pdf-button:disabled {
+  background-color: #c0c0c0; /* Cinza para indicar desativado */
+  border-color: #c0c0c0;
+  cursor: not-allowed;
+}
+
 .drive-button {
   background-color: #4285f4; /* Azul Google Drive */
   border-color: #4285f4;
@@ -77,6 +83,12 @@
 
 .drive-button:hover {
   background-color: #3367d6;
+}
+
+.drive-button:disabled {
+  background-color: #c0c0c0; /* Cinza para botões desabilitados */
+  border-color: #c0c0c0;
+  cursor: not-allowed; /* Cursor indicando que não pode ser clicado */
 }
 
 .icon-space {
@@ -105,4 +117,14 @@
 .dropdown-button:hover {
   background-color: #0056b3;
   transform: translateY(-2px); /* Efeito de elevação */
+}
+
+.result-title {
+  font-size: 1.5rem; /* Tamanho da fonte */
+  font-weight: bold; /* Texto em negrito */
+  color: #333; /* Cor do texto */
+  margin-bottom: 1rem; /* Espaçamento abaixo */
+  padding: 0.5rem; /* Espaçamento interno */
+  border-bottom: 2px solid #ccc; /* Linha inferior para destaque */
+  text-transform: uppercase; /* Transformar texto para maiúsculas */
 }

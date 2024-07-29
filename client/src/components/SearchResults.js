@@ -1,38 +1,26 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Pagination from '../components/Pagination';
 import '../Styles/SearchResults.css';
-import { FaFilePdf, FaGoogleDrive } from 'react-icons/fa';
+import { FaFilePdf, FaGoogleDrive, FaTools } from 'react-icons/fa';
+
+const RESULTS_PER_PAGE = 5;
 
 function SearchResults({ groupedResults, currentPages, handlePageChange, dropdownOpen, setDropdownOpen }) {
+  const [sentToDrive, setSentToDrive] = useState({});
+  const [loading, setLoading] = useState({});
+
   useEffect(() => {
     if (dropdownOpen && !(dropdownOpen in currentPages)) {
-      handlePageChange(dropdownOpen, 1);
+      handlePageChange(dropdownOpen, {}, 1);
     }
   }, [dropdownOpen, currentPages, handlePageChange]);
 
   const generatePDF = async (link) => {
-    console.log('Generating PDF for link:', link);
-    try {
-      const response = await fetch('http://localhost:5000/api/generate-pdf', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ articleUrl: link }),
-      });
-      const data = await response.json();
-      console.log(data.message);
-    } catch (error) {
-      console.error('Erro ao gerar PDF:', error);
-    }
+    console.log('PDF generation is currently under maintenance.');
   };
 
   const saveToDrive = async (link, keyword, source) => {
-    console.log('Attempting to save to drive:');
-    console.log('Link:', link);
-    console.log('Keyword:', keyword);
-    console.log('Source:', source);
-
+    setLoading(prev => ({ ...prev, [link]: true }));
     try {
       const response = await fetch('http://localhost:5000/api/save-to-drive', {
         method: 'POST',
@@ -43,8 +31,12 @@ function SearchResults({ groupedResults, currentPages, handlePageChange, dropdow
       });
       const data = await response.json();
       console.log('Save to Drive response:', data.message);
+      
+      setSentToDrive(prev => ({ ...prev, [link]: true }));
     } catch (error) {
       console.error('Erro ao salvar no Drive:', error);
+    } finally {
+      setLoading(prev => ({ ...prev, [link]: false }));
     }
   };
 
@@ -57,33 +49,44 @@ function SearchResults({ groupedResults, currentPages, handlePageChange, dropdow
           </button>
           {dropdownOpen === source && (
             <div className="dropdown-content">
-              {Object.keys(groupedResults[source]).map(keyword => (
-                <div key={keyword} className="keyword-group">
-                  <h4>Keyword: {keyword}</h4>
-                  {groupedResults[source][keyword].map((result, index) => (
-                    <div key={index} className="result-item">
-                      {result.image && <img src={result.image} alt="" className="thumbnail" />}
-                      <div className="result-content">
-                        <p>{result.title}</p>
-                        <div className="button-group">
-                          <button onClick={() => window.open(result.link, '_blank')} className="link-button">Ler mais</button>
-                          <button onClick={() => generatePDF(result.link)} className="link-button pdf-button">
-                            <FaFilePdf className="icon-space"/>  PDF
-                          </button>
-                          <button onClick={() => saveToDrive(result.link, keyword, source)} className="link-button drive-button">
-                            <FaGoogleDrive className="icon-space"/>  Drive
-                          </button>
+              {Object.keys(groupedResults[source]).map(keyword => {
+                const currentPage = currentPages[source] && currentPages[source][keyword] || 1;
+                const startIndex = (currentPage - 1) * RESULTS_PER_PAGE;
+                const endIndex = startIndex + RESULTS_PER_PAGE;
+                const paginatedResults = groupedResults[source][keyword].slice(startIndex, endIndex);
+
+                return (
+                  <div key={keyword} className="keyword-group">
+                    <h4 className="result-title">Resultados de: {keyword}</h4>
+                    {paginatedResults.map((result, index) => (
+                      <div key={index} className="result-item">
+                        {result.image && <img src={result.image} alt="" className="thumbnail" />}
+                        <div className="result-content">
+                          <p>{result.title}</p>
+                          <div className="button-group">
+                            <button onClick={() => window.open(result.link, '_blank')} className="link-button">Ler mais</button>
+                            <button className="link-button pdf-button" disabled>
+                              <FaTools className="icon-space" /> PDF (Manutenção)
+                            </button>
+                            <button 
+                              onClick={() => saveToDrive(result.link, keyword, source)} 
+                              className="link-button drive-button"
+                              disabled={sentToDrive[result.link] || loading[result.link]}
+                            >
+                              {loading[result.link] ? 'Carregando...' : (sentToDrive[result.link] ? 'Enviado' : <><FaGoogleDrive className="icon-space"/>  Drive</>)}
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                  <Pagination 
-                    currentPage={currentPages[source] ? currentPages[source][keyword] || 1 : 1} 
-                    totalPages={Math.ceil(groupedResults[source][keyword].length / 5)} 
-                    setCurrentPage={(page) => handlePageChange(source, keyword, page)}
-                  />
-                </div>
-              ))}
+                    ))}
+                    <Pagination 
+                      currentPage={currentPage} 
+                      totalPages={Math.ceil(groupedResults[source][keyword].length / RESULTS_PER_PAGE)} 
+                      setCurrentPage={(page) => handlePageChange(source, keyword, page)}
+                    />
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

@@ -6,8 +6,6 @@ import DateFilter from '../components/DateFilter';
 import SearchResults from '../components/SearchResults';
 import '../Styles/News.css';
 
-const RESULTS_PER_PAGE = 5;
-
 function News() {
   const [keyword, setKeyword] = useState('');
   const [iniciodia, setInicioDia] = useState('');
