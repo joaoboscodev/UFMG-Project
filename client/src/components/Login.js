@@ -37,8 +37,8 @@ function Login() {
     <div className="login-page">
       <div className="login-container">
         <div className="login-image">
-          <h1>Welcome to UFMG website</h1>
-          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+          <h1>Software</h1>
+          <p>Projeto somos diversas</p>
         </div>
         <div className="login-form">
           <h2>Entrar</h2>

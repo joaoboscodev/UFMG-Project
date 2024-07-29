@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import Pagination from '../components/Pagination';
 import '../Styles/SearchResults.css';
+import { FaFilePdf, FaGoogleDrive } from 'react-icons/fa';
 
 function SearchResults({ groupedResults, currentPages, handlePageChange, dropdownOpen, setDropdownOpen }) {
   useEffect(() => {
@@ -64,12 +65,15 @@ function SearchResults({ groupedResults, currentPages, handlePageChange, dropdow
                       {result.image && <img src={result.image} alt="" className="thumbnail" />}
                       <div className="result-content">
                         <p>{result.title}</p>
-                        <button onClick={() => window.open(result.link, '_blank')} className="link-button">Ler mais</button>
-                        <button onClick={() => generatePDF(result.link)} className="link-button">Gerar PDF</button>
-                        <button onClick={() => { 
-                          console.log('Botão "Enviar para o Drive" clicado');
-                          saveToDrive(result.link, keyword, source); 
-                        }} className="link-button">Enviar para o Drive</button>
+                        <div className="button-group">
+                          <button onClick={() => window.open(result.link, '_blank')} className="link-button">Ler mais</button>
+                          <button onClick={() => generatePDF(result.link)} className="link-button pdf-button">
+                            <FaFilePdf className="icon-space"/>  PDF
+                          </button>
+                          <button onClick={() => saveToDrive(result.link, keyword, source)} className="link-button drive-button">
+                            <FaGoogleDrive className="icon-space"/>  Drive
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
