@@ -8,13 +8,14 @@ function KeywordsBox({ keywords, removeKeyword, handleMultiSearch }) {
       {keywords.length === 0 ? (
         <p>Nenhuma palavra-chave adicionada.</p>
       ) : (
-        <ul>
+        <div className="keywords-list">
           {keywords.map((kw, index) => (
-            <li key={index}>
-              {kw} <button onClick={() => removeKeyword(index)}>Remover</button>
-            </li>
+            <div key={index} className="keyword-item">
+              <span>{kw}</span>
+              <button onClick={() => removeKeyword(index)}>X</button>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
       {keywords.length > 0 && (
         <button className="search-button" onClick={handleMultiSearch}>Pesquisar todas as palavras-chave</button>
