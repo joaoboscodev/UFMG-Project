@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import '../Styles/SearchBox.css';
 
 function SearchBox({ keyword, setKeyword, handleSingleSearch, addKeyword, handleSourceChange, sources }) {

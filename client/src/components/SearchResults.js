@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Pagination from '../components/Pagination';
 import '../Styles/SearchResults.css';
-import { FaFilePdf, FaGoogleDrive, FaTools } from 'react-icons/fa';
+import { FaGoogleDrive, FaTools } from 'react-icons/fa';
 
 const RESULTS_PER_PAGE = 5;
 
@@ -15,9 +15,9 @@ function SearchResults({ groupedResults, currentPages, handlePageChange, dropdow
     }
   }, [dropdownOpen, currentPages, handlePageChange]);
 
-  const generatePDF = async (link) => {
-    console.log('PDF generation is currently under maintenance.');
-  };
+  // const generatePDF = async (link) => {
+  //   console.log('PDF generation is currently under maintenance.');
+  // };
 
   const saveToDrive = async (link, keyword, source) => {
     setLoading(prev => ({ ...prev, [link]: true }));
